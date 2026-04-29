@@ -18,6 +18,18 @@ Google Drive dataset_prepared link: TODO
 Google Drive raw V2V4Real link: TODO, optional
 ```
 
+Upload helper after `rclone` is configured:
+
+```powershell
+.\tools\upload_dataset_to_drive_rclone.ps1 -Remote gdrive -DriveFolder uwo-v2v-bev-reconstruction-dataset
+```
+
+The script is resumable and does not change the Git repo. It uploads:
+
+```text
+<repo root>/dataset_prepared -> gdrive:uwo-v2v-bev-reconstruction-dataset/dataset_prepared
+```
+
 Recommended sharing target:
 
 ```text
