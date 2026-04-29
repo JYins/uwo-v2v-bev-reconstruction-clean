@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proposal and Paper Reading Notes</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; max-width: 960px; margin: 0 auto; padding: 30px 22px 54px; color: #17202a; line-height: 1.58; }
+    h1 { margin-bottom: 6px; }
+    h2 { margin-top: 30px; border-bottom: 1px solid #d9e2ec; padding-bottom: 6px; }
+    h3 { margin-top: 22px; }
+    p, li { color: #4d5f70; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid #d9e2ec; padding: 9px 10px; vertical-align: top; }
+    th { background: #eef4fb; color: #17202a; }
+    code { background: #edf2f7; padding: 2px 4px; border-radius: 3px; }
+    .note { border-left: 4px solid #1f5fbf; background: #f2f6fc; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+  <h1>Generative V2V 3D Reconstruction</h1>
+  <p>Proposal and paper-reading notes prepared for supervisor review. Source markdown is kept at <code>docs/source_markdown/research_proposal_generative_v2v_3d_reconstruction.md</code>.</p>
+
+  <div class="note">
+    <strong>Current project position:</strong> the practical finished experiment is masked multi-height BEV reconstruction. The longer research direction is BEV-to-point-cloud reconstruction for communication-efficient V2V perception.
+  </div>
+
+  <h2>Problem Statement</h2>
+  <p>Raw LiDAR sharing gives rich geometry but is too expensive for V2V communication. Box-only or highly compressed feature sharing saves bandwidth but loses geometric context. This project studies whether a compact multi-height BEV can be transmitted and then reconstructed with a lightweight generative model.</p>
+
+  <h2>Technical Pipeline</h2>
+  <table>
+    <tr><th>Stage</th><th>Design</th><th>Reason</th></tr>
+    <tr><td>Sender</td><td>Convert LiDAR into multi-height BEV.</td><td>Preserves vertical structure while becoming image-like and compact.</td></tr>
+    <tr><td>Transmission</td><td>Send BEV representation instead of raw point cloud.</td><td>Lower bandwidth than raw LiDAR.</td></tr>
+    <tr><td>Receiver</td><td>Use U-Net / Pix2Pix / Diffusion to reconstruct missing BEV structure.</td><td>Tests whether generative reconstruction can recover the ego blind sector.</td></tr>
+    <tr><td>Future perception step</td><td>Convert or use reconstruction for downstream 3D detection.</td><td>Final thesis direction is task-aware perception, not just image metrics.</td></tr>
+  </table>
+
+  <h2>Strategic Decisions</h2>
+  <ul>
+    <li><strong>U-Net as main baseline:</strong> fast, stable, and best in the confirmed experiments.</li>
+    <li><strong>Pix2Pix as GAN comparison:</strong> useful to test adversarial sharpness, but final result is weaker than U-Net.</li>
+    <li><strong>Diffusion as corrected negative baseline:</strong> v3 is implemented fairly, but over-predicts occupancy and is too slow/weak for the current task.</li>
+    <li><strong>Multi-height BEV:</strong> 8 channels keep density and height information without raw point-cloud bandwidth.</li>
+    <li><strong>Masked Occ-IoU:</strong> more important than full-image PSNR because the task is hidden-sector reconstruction.</li>
+  </ul>
+
+  <h2>Benchmark Thinking</h2>
+  <table>
+    <tr><th>Evaluation Dimension</th><th>Metrics</th><th>Purpose</th></tr>
+    <tr><td>Reconstruction</td><td>Masked MAE/RMSE/PSNR, masked Occ-IoU</td><td>Checks whether the missing area is actually recovered.</td></tr>
+    <tr><td>Fused output</td><td>Fused full PSNR, fused full Occ-IoU</td><td>Visible region is copied back; model only fills hidden sector.</td></tr>
+    <tr><td>Future perception</td><td>AP@0.5 / AP@0.7</td><td>Needed later to connect reconstruction to 3D detection usefulness.</td></tr>
+    <tr><td>Communication</td><td>MB/frame or bitrate</td><td>Needed to compare against feature-sharing and query-sharing baselines.</td></tr>
+  </table>
+
+  <h2>Paper Reading Map</h2>
+  <h3>V2V / V2X Perception</h3>
+  <ul>
+    <li><strong>V2V4Real:</strong> real-world V2V dataset and benchmark used by this project.</li>
+    <li><strong>V2X-ViT:</strong> strong transformer-based cooperative perception baseline.</li>
+    <li><strong>CoBEVT:</strong> strong cooperative BEV baseline for perception accuracy comparison.</li>
+    <li><strong>V2U4Real and V2X-Radar:</strong> recent extensions showing that this dataset ecosystem is still active.</li>
+  </ul>
+
+  <h3>Reconstruction / Representation</h3>
+  <ul>
+    <li><strong>CORE:</strong> closest conceptual reference around cooperative reconstruction, but reconstructs BEV features rather than explicit point-cloud geometry.</li>
+    <li><strong>BEV-MAE:</strong> supports the idea that BEV-guided masked reconstruction can help 3D understanding.</li>
+    <li><strong>CoCMT:</strong> extreme communication-efficient object-query baseline; useful contrast because this project keeps more geometric context.</li>
+  </ul>
+
+  <h2>Current Experiment Link</h2>
+  <p>The current repo does not yet claim final BEV-to-point-cloud detection AP. The confirmed completed contribution is a clean comparison of U-Net, Pix2Pix, and corrected Diffusion v3 for masked 8-channel BEV reconstruction on V2V4Real-derived data.</p>
+
+  <p>For final experiment results, open <a href="final_results_report.html">final_results_report.html</a>.</p>
+</body>
+</html>

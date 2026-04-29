@@ -1,0 +1,116 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env / IDE
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Large datasets and generated outputs
+V2V4Real/
+dataset_prepared/
+**/V2V4Real/
+**/dataset_prepared/
+train_01/
+train_02/
+train_03/
+train_04/
+train_05/
+train_06/
+train_07/
+train_08/
+test_01/
+test_02/
+test_03/
+val_01/
+
+# Training artifacts
+**/checkpoints/
+**/local_runs/
+*.pth
+*.pt
+*.ckpt
+*.npy
+training/checkpoints/
+training/results/
+reports/training_curves.png
+training_balanced80/
+training_balanced_smoke/
+training_occprobe/
+training_seedcheck_a/
+training_seedcheck_b/
+training_unet_optuna_seed42/
+training_unet_optuna_seed43/
+training_unet_optuna_seed44/
+
+# Standalone script outputs
+output_v3/
+
+# Optuna and local experiment outputs
+**/optuna_search/trial_*/
+**/optuna_search/**/trial_*/
+**/optuna_search/*.log
+**/optuna_search/**/*.log
+**/optuna_search/*.db
+**/optuna_search/**/*.db
+**/optuna_search/*.sqlite
+**/optuna_search/**/*.sqlite
+**/optuna_search/*.sqlite3
+**/optuna_search/**/*.sqlite3
+optuna_debug/
+optuna_unet/
+optuna_unet_smoke/
+optuna_unet_stale_*/
+optuna_unet_run/trial_*/
+optuna_unet_run/*.log
+optuna_unet_run/*.db
+
+# Generated reports and figures
+reports/balanced80/
+reports/balanced_smoke/
+reports/comparison_unet80_vs_balanced80/
+reports/predictions_balanced80/
+reports/predictions_occprobe/
+reports/predictions_unet80/
+reports/predictions_pix2pix_seed42/
+reports/channel_splits_unet_seed42/
+reports/thresholded_unet_seed42/
+reports/thresholded_unet_seed42_v2/
+reports/thresholded_pix2pix_seed42/
+reports/unet_seed42_refresh/
+reports/weekly_metrics_compare.png
+reports/project_report.md
+reports/weekly_update_2026-03-18.md
+
+# Local transfer / cloud sync artifacts
+narval_sync_logs/
+narval_runs/
+
+# Local pre-cleanup archives kept on disk but not meant for the supervisor repo
+old_versions/misc/root_scripts_before_cleanup/
+old_versions/reports_archive/
+
+# Pix2Pix optuna local outputs
+optuna_pix2pix_adv/
+
+# Additional training artifacts
+training_diffusion_smoke_seed42/
+training_diffusion_smoke_v2_seed42/
+training_pix2pix_full_seed42/
+training_pix2pix_smoke_seed42/
+training_pix2pix_smoke_v2_seed42/
+training_unet_focal15_seed42/
+training_unet_focal15_seed42_v2/
+training_unet_layerprobe_probe15_seed42_v5/
+training_unet_layerprobe_smoke_seed42/
+training_unet_layerprobe_smoke_seed42_v2/
+training_unet_layerprobe_smoke_seed42_v3/
+training_unet_layerprobe_smoke_seed42_v4/
+training_unet_layerprobe_smoke_seed42_v5/
+
+# Local exports
+output/

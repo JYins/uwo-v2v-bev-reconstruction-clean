@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>V2V BEV Reconstruction - Supervisor Overview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5f6f7f;
+      --line: #d9e2ec;
+      --blue: #1f5fbf;
+      --green: #19735b;
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 22px 56px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 34px; }
+    h2 { margin-top: 34px; font-size: 22px; }
+    p { color: var(--muted); }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef4fb; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .tile {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .tile strong { display: block; margin-bottom: 6px; }
+    .note {
+      border-left: 4px solid var(--green);
+      background: #eef8f5;
+      padding: 12px 14px;
+      margin: 18px 0;
+    }
+    img {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+    }
+    code { background: #edf2f7; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>V2V BEV Reconstruction</h1>
+    <p>Supervisor overview for the cleaned MEng project repo. The final promoted versions are only the confirmed runs, and older attempts are separated under <code>old_versions/</code>.</p>
+  </header>
+
+  <section class="note">
+    <strong>Main conclusion:</strong> U-Net is the best official baseline. Pix2Pix is a valid but weaker GAN comparison. Diffusion v3 is corrected and fully tested, but remains a negative baseline.
+  </section>
+
+  <h2>Open These First</h2>
+  <div class="grid">
+    <div class="tile"><strong>Final report</strong><a href="docs/final_results_report.html">docs/final_results_report.html</a></div>
+    <div class="tile"><strong>Proposal and paper notes</strong><a href="docs/research_proposal_and_paper_reading.html">docs/research_proposal_and_paper_reading.html</a></div>
+    <div class="tile"><strong>Dataset access</strong><a href="DATASET_ACCESS.md">DATASET_ACCESS.md</a></div>
+    <div class="tile"><strong>All figures</strong><a href="results/FIGURE_MANIFEST.md">results/FIGURE_MANIFEST.md</a></div>
+  </div>
+
+  <h2>Confirmed Final Runs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Evidence</th>
+        <th>Masked Occ-IoU</th>
+        <th>Masked RMSE</th>
+        <th>Fused Full PSNR</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="01_unet_final/README.md">U-Net final</a></td>
+        <td>Seeds 42/43/44, 80 epochs, Optuna shared loss</td>
+        <td>0.1494 +/- 0.0019</td>
+        <td>0.05595 +/- 0.00008</td>
+        <td>33.66 +/- 0.01</td>
+      </tr>
+      <tr>
+        <td><a href="02_pix2pix_final/README.md">Pix2Pix final</a></td>
+        <td>Seed 42, 40 epochs, <code>lambda_adv=0.1</code></td>
+        <td>0.1317</td>
+        <td>0.06139</td>
+        <td>32.86</td>
+      </tr>
+      <tr>
+        <td><a href="03_diffusion_final/README.md">Diffusion v3 final</a></td>
+        <td>Seed 42, 120 epochs, Narval A100</td>
+        <td>0.0467</td>
+        <td>0.38101</td>
+        <td>17.00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Final Comparison</h2>
+  <img src="results/figures/final_results/final_metric_comparison.png" alt="Final metric comparison">
+
+  <h2>Qualitative Cases</h2>
+  <img src="results/figures/final_results/final_models_case_01.png" alt="Final model comparison case 1">
+  <p>More cases are in <code>results/figures/final_results/</code>.</p>
+
+  <h2>Folder Map</h2>
+  <div class="grid">
+    <div class="tile"><strong>00_data_pipeline</strong>Raw V2V4Real to 8-channel BEV preparation.</div>
+    <div class="tile"><strong>01_unet_final</strong>Official best baseline and exact 3-seed commands.</div>
+    <div class="tile"><strong>02_pix2pix_final</strong>GAN baseline and adversarial-weight evidence.</div>
+    <div class="tile"><strong>03_diffusion_final</strong>Corrected diffusion v3 baseline and failure diagnosis.</div>
+    <div class="tile"><strong>old_versions</strong>Smoke runs, probes, ablations, invalid early versions.</div>
+    <div class="tile"><strong>results</strong>Figures, metrics, and visualization scripts.</div>
+  </div>
+</main>
+</body>
+</html>

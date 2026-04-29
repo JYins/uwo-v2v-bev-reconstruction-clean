@@ -1,0 +1,13 @@
+{
+  "study_name": "pix2pix_adv_search",
+  "seed": 42,
+  "n_trials_requested": 12,
+  "n_trials_total": 18,
+  "shared_config": "D:\\MEng_Project\\optuna_unet_run\\best_params.json",
+  "selected_trial": 0,
+  "selected_lambda_adv": 0.1,
+  "selected_value_masked_occ_iou": 0.14506318860526296,
+  "selected_best_epoch": 8,
+  "selected_best_masked_rmse": 0.05235292970271888,
+  "selected_best_fused_full_psnr": 34.239416802550046
+}

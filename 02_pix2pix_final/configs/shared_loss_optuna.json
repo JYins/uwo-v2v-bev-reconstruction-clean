@@ -1,0 +1,20 @@
+{
+  "study_name": "unet_loss_search",
+  "seed": 42,
+  "n_trials_requested": 24,
+  "n_trials_total": 24,
+  "selected_trial": 21,
+  "selected_value_masked_occ_iou": 0.16515647383346965,
+  "selected_best_epoch": 12,
+  "selected_best_masked_rmse": 0.04728887371466974,
+  "selected_best_fused_full_psnr": 35.12305719447444,
+  "shared_loss_config": {
+    "loss_l1_weight": 0.8082426103528428,
+    "occ_bce_weight": 0.27840993525472485,
+    "occ_weight": 2.7593891857986734,
+    "occ_pos_weight": 8,
+    "occ_threshold": 0.07,
+    "occ_logit_temp": 0.03,
+    "loss_mse_weight": 0.19175738964715716
+  }
+}

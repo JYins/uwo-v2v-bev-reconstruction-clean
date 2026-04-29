@@ -1,0 +1,569 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Final BEV Reconstruction Results Report</title>
+<style>
+body { font-family: "Segoe UI", Arial, sans-serif; color:#172033; max-width: 1120px; margin: 36px auto; line-height:1.48; }
+h1 { color:#0f3d77; font-size: 34px; border-bottom: 4px solid #60a5fa; padding-bottom: 10px; }
+h2 { color:#155e75; margin-top: 34px; border-left: 7px solid #38bdf8; padding-left: 12px; }
+h3 { color:#334155; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0 24px; font-size: 13px; }
+th { background: #0f3d77; color: white; padding: 8px; text-align: left; }
+td { border: 1px solid #d8e2ef; padding: 7px; vertical-align: top; }
+tr:nth-child(even) td { background: #f8fafc; }
+img { max-width: 100%; border-radius: 8px; border: 1px solid #dbe4f0; box-shadow: 0 4px 18px rgba(15,23,42,0.08); margin: 10px 0 20px; }
+code, pre { background:#0f172a; color:#e2e8f0; border-radius:8px; }
+pre { padding: 14px; overflow-x:auto; }
+.checklist { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 18px; }
+.conclusion { background:#ecfdf5; border:1px solid #86efac; border-radius:12px; padding:12px 18px; }
+</style>
+</head>
+<body><h1 id="final-bev-reconstruction-results-report">Final BEV
+Reconstruction Results Report</h1>
+<p><span style="color:#2563eb;font-weight:700;">Project:</span>
+Cooperative masked BEV reconstruction using ego masked BEV + neighbor
+BEV.<br />
+<span style="color:#2563eb;font-weight:700;">Report date:</span>
+2026-04-23<br />
+<span style="color:#2563eb;font-weight:700;">Main conclusion:</span>
+U-Net remains the strongest final baseline. Pix2Pix is a valid but
+weaker GAN comparison. Diffusion v3 is now a properly tested negative
+baseline.</p>
+<h2 id="1-executive-checklist">1. Executive Checklist</h2>
+<div class="checklist">
+
+<ul>
+<li>[DONE] Built the 8-channel BEV reconstruction pipeline and fixed
+train / val / test protocol.</li>
+<li>[DONE] Tuned and locked the shared U-Net reconstruction loss with
+Optuna.</li>
+<li>[DONE] Completed the final U-Net 3-seed run.</li>
+<li>[DONE] Added thresholded visualization and split Occ-IoU into
+precision / recall / F1.</li>
+<li>[DONE] Diagnosed the U-Net limitation: false positives plus
+layer-wise information weakening.</li>
+<li>[DONE] Tested focal occupancy loss and layer-preserving U-Net
+probes; neither beat the official baseline.</li>
+<li>[DONE] Completed Pix2Pix smoke, full seed42 run, and
+adversarial-weight Optuna search.</li>
+<li>[DONE] Confirmed Pix2Pix best <code>lambda_adv = 0.1</code>;
+integer-scale weights such as <code>1.0</code> and <code>2.0</code> were
+worse.</li>
+<li>[DONE] Fixed Diffusion implementation with timestep conditioning and
+DDIM-style sampled evaluation.</li>
+<li>[DONE] Completed a fresh Narval A100 Diffusion v3 full run for 120
+epochs.</li>
+</ul>
+</div>
+
+<h2 id="2-experiment-evolution">2. Experiment Evolution</h2>
+<p><img src="assets/experiment_flowchart.png"
+alt="Experiment flowchart" /></p>
+<h2 id="3-training--design-timeline">3. Training / Design Timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>What changed</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U-Net initial</td>
+<td>Baseline BEV reconstruction</td>
+<td>Established task pipeline and first baseline</td>
+</tr>
+<tr>
+<td>U-Net balanced / occupancy-aware</td>
+<td>Added weighted L1 + masked MSE + occupancy BCE</td>
+<td>Improved masked structure recovery</td>
+</tr>
+<tr>
+<td>U-Net Optuna</td>
+<td>Tuned shared loss weights</td>
+<td>Final shared loss selected</td>
+</tr>
+<tr>
+<td>U-Net 3 seeds</td>
+<td>Ran seed 42/43/44, 80 epochs</td>
+<td>Official baseline: masked Occ-IoU 0.1494 +/- 0.0023</td>
+</tr>
+<tr>
+<td>Threshold + diagnostics</td>
+<td>Added thresholded visualization, precision / recall / F1</td>
+<td>Found U-Net recall is high but false positives remain</td>
+</tr>
+<tr>
+<td>Focal U-Net ablation</td>
+<td>Replaced occ BCE with focal occupancy loss</td>
+<td>Did not beat baseline; rejected</td>
+</tr>
+<tr>
+<td>Layer-preserving U-Net probes</td>
+<td>Tried per-bin/height terms, then light height loss</td>
+<td>Stable but did not clearly improve layer preservation; baseline
+kept</td>
+</tr>
+<tr>
+<td>Pix2Pix smoke</td>
+<td>Initial lambda_adv=1.0</td>
+<td>Adversarial term too strong</td>
+</tr>
+<tr>
+<td>Pix2Pix full</td>
+<td>Reduced lambda_adv=0.1</td>
+<td>Best Pix2Pix single-seed run completed</td>
+</tr>
+<tr>
+<td>Pix2Pix Optuna</td>
+<td>Searched lambda_adv from 0.1 to 2.0, including integer-scale
+weights</td>
+<td>Confirmed lambda_adv=0.1; 1.0/2.0 underperformed</td>
+</tr>
+<tr>
+<td>Diffusion smoke</td>
+<td>Local low-memory smoke</td>
+<td>Pipeline ran, but early result was not meaningful</td>
+</tr>
+<tr>
+<td>Diffusion v1 cloud</td>
+<td>80 target but timed out around epoch 31, proxy eval and no timestep
+conditioning</td>
+<td>Invalid as final comparison</td>
+</tr>
+<tr>
+<td>Diffusion v2</td>
+<td>Added timestep conditioning and DDIM evaluation</td>
+<td>Correct pipeline, still weak</td>
+</tr>
+<tr>
+<td>Diffusion v3 final</td>
+<td>Fresh Narval A100 run, 120 epochs, LR schedule, grad clipping</td>
+<td>Completed; solid negative baseline</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-final-cross-model-quantitative-comparison">4. Final
+Cross-Model Quantitative Comparison</h2>
+<p><img src="assets/final_metric_comparison.png"
+alt="Metric comparison" /></p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Seed(s)</th>
+<th>Epochs</th>
+<th>Final loss/objective</th>
+<th>Masked Occ-IoU (higher better)</th>
+<th>Masked RMSE (lower better)</th>
+<th>Fused Full PSNR (higher better)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U-Net</td>
+<td>42 / 43 / 44</td>
+<td>80</td>
+<td>Shared reconstruction + occupancy loss</td>
+<td>0.1494 +/- 0.0023</td>
+<td>0.05595 +/- 0.00010</td>
+<td>33.66 +/- 0.02</td>
+<td>Best official baseline</td>
+</tr>
+<tr>
+<td>Pix2Pix</td>
+<td>42</td>
+<td>40</td>
+<td>0.1 * adversarial + shared loss</td>
+<td>0.1317</td>
+<td>0.06139</td>
+<td>32.86</td>
+<td>Valid GAN comparison</td>
+</tr>
+<tr>
+<td>Diffusion v3</td>
+<td>42</td>
+<td>120</td>
+<td>noise prediction + shared loss</td>
+<td>0.0467</td>
+<td>0.38101</td>
+<td>17.00</td>
+<td>Solid negative baseline</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-occupancy-diagnostics">5. Occupancy Diagnostics</h2>
+<p>These diagnostics explain why RMSE/PSNR alone are not enough. U-Net
+has the best main result, Pix2Pix is more conservative, and Diffusion
+predicts too much of the masked region as occupied.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U-Net seed42</td>
+<td>0.2002</td>
+<td>0.3745</td>
+<td>0.2609</td>
+<td>Higher recall, but visible false positives and layer weakening</td>
+</tr>
+<tr>
+<td>Pix2Pix seed42</td>
+<td>0.2701</td>
+<td>0.2044</td>
+<td>0.2327</td>
+<td>More conservative; precision higher, recall lower</td>
+</tr>
+<tr>
+<td>Diffusion v3 seed42</td>
+<td>0.0467</td>
+<td>1.0000</td>
+<td>0.0893</td>
+<td>Recall = 1.0, but precision collapses: predicts too much occupied
+area</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-final-loss-definitions">6. Final Loss Definitions</h2>
+<p>Common shared loss:</p>
+<pre class="text"><code>L_shared =
+  0.8082 * masked_weighted_L1
++ 0.1918 * masked_MSE
++ 0.2784 * masked_occ_BCE</code></pre>
+<p>Occupancy-related internal hyperparameters:</p>
+<pre class="text"><code>occ_weight = 2.7594
+occ_pos_weight = 8
+occ_threshold = 0.07
+occ_logit_temp = 0.03</code></pre>
+<p>Model-specific objectives:</p>
+<pre class="text"><code>U-Net      : L_unet      = L_shared
+Pix2Pix    : L_pix2pix    = 0.1 * L_adv + L_shared
+Diffusion  : L_diffusion  = L_noise + L_shared</code></pre>
+<h2 id="7-final-qualitative-outputs">7. Final Qualitative Outputs</h2>
+<p>The following panels show six different test cases using the same
+final checkpoints. Each panel uses the same layout:
+<code>Masked Ego | Ground Truth | U-Net | Pix2Pix | Diffusion v3</code>.</p>
+<h3 id="case-1">Case 1</h3>
+<p><img src="assets/final_models_case_01.png"
+alt="Final models case 1" /></p>
+<h3 id="case-2">Case 2</h3>
+<p><img src="assets/final_models_case_02.png"
+alt="Final models case 2" /></p>
+<h3 id="case-3">Case 3</h3>
+<p><img src="assets/final_models_case_03.png"
+alt="Final models case 3" /></p>
+<h3 id="case-4">Case 4</h3>
+<p><img src="assets/final_models_case_04.png"
+alt="Final models case 4" /></p>
+<h3 id="case-5">Case 5</h3>
+<p><img src="assets/final_models_case_05.png"
+alt="Final models case 5" /></p>
+<h3 id="case-6">Case 6</h3>
+<p><img src="assets/final_models_case_06.png"
+alt="Final models case 6" /></p>
+<h2 id="8-per-layer-reconstruction-views">8. Per-Layer Reconstruction
+Views</h2>
+<p>The split view directly checks whether the model preserves the 8 BEV
+channels. <code>Abs Diff</code> means
+<code>|prediction - ground truth|</code>; brighter areas are larger
+per-layer errors.</p>
+<h3 id="u-net">U-Net</h3>
+<p><img src="assets/channel_split_unet.png"
+alt="U-Net channel split" /></p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Role</th>
+<th>Masked MAE</th>
+<th>Masked RMSE</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>d0</td>
+<td>density</td>
+<td>0.01606</td>
+<td>0.06083</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>d1</td>
+<td>density</td>
+<td>0.01020</td>
+<td>0.04366</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>d2</td>
+<td>density</td>
+<td>0.00672</td>
+<td>0.03126</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>d3</td>
+<td>density</td>
+<td>0.00436</td>
+<td>0.01623</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>h0</td>
+<td>height</td>
+<td>0.01963</td>
+<td>0.10967</td>
+<td>Weak</td>
+</tr>
+<tr>
+<td>h1</td>
+<td>height</td>
+<td>0.00532</td>
+<td>0.05940</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>h2</td>
+<td>height</td>
+<td>0.00311</td>
+<td>0.04272</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>h3</td>
+<td>height</td>
+<td>0.00139</td>
+<td>0.02743</td>
+<td>Good</td>
+</tr>
+</tbody>
+</table>
+<p>Judgement: U-Net layer recovery is usable but not perfect. Mean
+density RMSE = 0.03800, mean height RMSE = 0.05981, and the weakest
+channel is h0. This supports the diagnosis that U-Net preserves the main
+occupancy structure, but some layer-wise geometry, especially
+height-related structure, is weakened.</p>
+<h3 id="pix2pix">Pix2Pix</h3>
+<p><img src="assets/channel_split_pix2pix.png"
+alt="Pix2Pix channel split" /></p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Role</th>
+<th>Masked MAE</th>
+<th>Masked RMSE</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>d0</td>
+<td>density</td>
+<td>0.01360</td>
+<td>0.06358</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>d1</td>
+<td>density</td>
+<td>0.00583</td>
+<td>0.04523</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>d2</td>
+<td>density</td>
+<td>0.00205</td>
+<td>0.03095</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>d3</td>
+<td>density</td>
+<td>0.00073</td>
+<td>0.01524</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>h0</td>
+<td>height</td>
+<td>0.02504</td>
+<td>0.12274</td>
+<td>Weak</td>
+</tr>
+<tr>
+<td>h1</td>
+<td>height</td>
+<td>0.00867</td>
+<td>0.07223</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>h2</td>
+<td>height</td>
+<td>0.00272</td>
+<td>0.04279</td>
+<td>Acceptable</td>
+</tr>
+<tr>
+<td>h3</td>
+<td>height</td>
+<td>0.00118</td>
+<td>0.02746</td>
+<td>Good</td>
+</tr>
+</tbody>
+</table>
+<p>Judgement: Pix2Pix also loses layer detail. Mean density RMSE =
+0.03875, mean height RMSE = 0.06631, and the weakest channel is h0. It
+is more conservative in occupancy, but that does not fully solve the
+layer-preservation issue.</p>
+<h3 id="diffusion-v3">Diffusion v3</h3>
+<p><img src="assets/channel_split_diffusion.png"
+alt="Diffusion channel split" /></p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Role</th>
+<th>Masked MAE</th>
+<th>Masked RMSE</th>
+<th>Quality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>d0</td>
+<td>density</td>
+<td>0.21354</td>
+<td>0.39561</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>d1</td>
+<td>density</td>
+<td>0.30705</td>
+<td>0.42800</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>d2</td>
+<td>density</td>
+<td>0.22091</td>
+<td>0.40037</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>d3</td>
+<td>density</td>
+<td>0.21350</td>
+<td>0.40029</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>h0</td>
+<td>height</td>
+<td>0.24273</td>
+<td>0.35705</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>h1</td>
+<td>height</td>
+<td>0.28194</td>
+<td>0.40864</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>h2</td>
+<td>height</td>
+<td>0.21356</td>
+<td>0.27739</td>
+<td>Poor</td>
+</tr>
+<tr>
+<td>h3</td>
+<td>height</td>
+<td>0.26675</td>
+<td>0.36020</td>
+<td>Poor</td>
+</tr>
+</tbody>
+</table>
+<p>Judgement: Diffusion v3 layer recovery is poor. Mean density RMSE =
+0.40606, mean height RMSE = 0.35082, and the weakest channel is d1. The
+large per-layer errors confirm that Diffusion v3 does not preserve
+reliable 8-channel BEV structure.</p>
+<h2 id="9-diffusion-v3-final-run">9. Diffusion v3 Final Run</h2>
+<p>Diffusion v3 was the corrected full run:</p>
+<ul>
+<li>Narval A100 run.</li>
+<li><code>seed = 42</code>.</li>
+<li><code>epochs = 120</code>.</li>
+<li><code>lr = 5e-5</code>, <code>min_lr = 5e-6</code>.</li>
+<li><code>warmup_epochs = 2</code>.</li>
+<li><code>grad_clip = 1.0</code>.</li>
+<li><code>sample_steps = 25</code>.</li>
+<li><code>val_every = 10</code>.</li>
+<li>timestep conditioning enabled.</li>
+<li>DDIM-style sampled validation/test enabled.</li>
+</ul>
+<p><img src="assets/diffusion_v3_curve.png" alt="Diffusion curve" /></p>
+<p>Final Diffusion v3 result:</p>
+<pre class="text"><code>best epoch              = 30
+test masked Occ-IoU     = 0.0467
+test masked precision   = 0.0467
+test masked recall      = 1.0000
+test masked RMSE        = 0.3810
+test fused full PSNR    = 17.00 dB</code></pre>
+<p>Interpretation: Diffusion v3 is no longer an invalid implementation
+run. It completed a full corrected 120-epoch training run, but the
+output occupancy collapses toward predicting too much occupied area.
+This gives recall <code>1.0</code>, but precision and Occ-IoU stay low.
+Therefore, it is a solid negative baseline rather than a competitive
+final model.</p>
+<h2 id="10-final-conclusion">10. Final Conclusion</h2>
+<div class="conclusion">
+
+<p>The final model ranking is clear:</p>
+<ol type="1">
+<li><strong>U-Net</strong> is the official best baseline by masked
+Occ-IoU and RMSE.</li>
+<li><strong>Pix2Pix</strong> is a valid adversarial comparison, but it
+does not beat U-Net. Optuna confirmed that the small adversarial weight
+<code>0.1</code> is best.</li>
+<li><strong>Diffusion v3</strong> was properly corrected and fully
+trained, but it remains non-competitive. The main failure mode is
+over-predicting occupancy in the masked region.</li>
+</ol>
+</div>
+
+<h2 id="11-source-files">11. Source Files</h2>
+<ul>
+<li>U-Net 3-seed summary:
+<code>../01_unet_final/results/summary/unet_optuna_3seed_summary.json</code></li>
+<li>U-Net seed42 diagnostics:
+<code>../01_unet_final/results/seed42/test_metrics_refresh.json</code></li>
+<li>Pix2Pix summary:
+<code>../02_pix2pix_final/results/seed42/pix2pix_summary.json</code></li>
+<li>Pix2Pix Optuna best params:
+<code>../02_pix2pix_final/configs/pix2pix_adv_best.json</code></li>
+<li>Diffusion v3 summary:
+<code>../03_diffusion_final/results/seed42/diffusion_summary.json</code></li>
+<li>Diffusion v3 history:
+<code>../03_diffusion_final/results/seed42/training_history.csv</code></li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,47 @@
+U-Net BEV Reconstruction - Training Summary
+==========================================================
+Dataset root:    D:\MEng_Project\dataset_prepared
+Training root:   D:\MEng_Project\training_unet_optuna_seed43
+Parameters:      1,944,568
+Features:        [16, 32, 64, 128]
+Epochs:          80
+Batch size:      12
+Learning rate:   0.0001
+Seed:            43
+AMP enabled:     True
+Training time:   564.9 minutes
+
+Loss setup
+  loss_l1_weight:  0.8082426103528428
+  loss_mse_weight: 0.19175738964715716
+  occ_weight:      2.7593891857986734
+  occ_threshold:   0.07
+  occ_bce_weight:  0.27840993525472485
+  occ_pos_weight:  8
+  occ_logit_temp:  0.03
+
+Best epoch: 24
+  masked MAE:      0.007412
+  masked RMSE:     0.047207
+  masked PSNR:     26.52 dB
+  masked Occ-IoU:  0.1631
+  fused full MAE:  0.001019
+  fused full RMSE: 0.017502
+  fused full PSNR: 35.14 dB
+  fused full IoU:  0.7737
+  full MAE:        0.006552
+  full RMSE:       0.053363
+  full PSNR:       25.46 dB
+
+Test metrics
+  masked MAE:      0.008663
+  masked RMSE:     0.055892
+  masked PSNR:     25.05 dB
+  masked Occ-IoU:  0.1469
+  fused full MAE:  0.001191
+  fused full RMSE: 0.020722
+  fused full PSNR: 33.67 dB
+  fused full IoU:  0.7491
+  full MAE:        0.007082
+  full RMSE:       0.056064
+  full PSNR:       25.03 dB

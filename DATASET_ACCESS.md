@@ -1,0 +1,82 @@
+# Dataset Access
+
+The processed dataset is too large for Git.
+
+Local size checked on 2026-04-29:
+
+```text
+dataset_prepared/  151.7 GB
+V2V4Real/            2.4 GB
+```
+
+## Google Drive Placeholder
+
+Put the shared dataset link here after upload:
+
+```text
+Google Drive dataset_prepared link: TODO
+Google Drive raw V2V4Real link: TODO, optional
+```
+
+Recommended sharing target:
+
+```text
+dataset_prepared/
+```
+
+This is the exact folder needed by the training scripts.
+
+## Expected Local Structure
+
+The repo expects the processed dataset at:
+
+```text
+D:\MEng_Project\dataset_prepared
+```
+
+or, more generally:
+
+```text
+<repo root>/dataset_prepared
+```
+
+Expected split folders:
+
+```text
+dataset_prepared/
+  train_*/
+    <scene>/
+      ego_bev/*.npy
+      masked_ego/*.npy
+      neighbor_bev/*.npy
+      sector_mask.npy
+  val_*/
+  test_*/
+```
+
+Each sample returns:
+
+```text
+input  = masked_ego(8ch) + neighbor_bev(8ch)
+target = clean ego_bev(8ch)
+mask   = 1 visible, 0 hidden
+```
+
+## Why It Is Not In Git
+
+Git should contain code, configs, metrics, and figures. It should not contain:
+
+- `dataset_prepared/`
+- raw `V2V4Real/`
+- model checkpoints
+- local training runs
+
+Those are ignored in `.gitignore`.
+
+## Quick Check After Download
+
+```powershell
+python .\01_unet_final\dataset.py --dataset_root .\dataset_prepared --batch_size 2
+```
+
+This should print train/val/test split discovery and tensor shapes.
