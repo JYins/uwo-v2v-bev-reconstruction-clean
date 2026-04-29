@@ -10,6 +10,8 @@ local_runs/training_diffusion_full_seed42_v3
 
 It was trained on Narval A100 for 120 epochs with timestep conditioning and DDIM-style sampled validation/test. This matters because earlier diffusion attempts were not fair final comparisons.
 
+One correction I want to make explicit: the confirmed v3 checkpoint uses `x_t(8ch) + masked ego/neighbor condition(16ch) = 24 input channels`. The mask is used for loss and metrics, but it is not concatenated as an extra model input channel in this final run.
+
 ## Why This Is Final
 
 - It fixes the old missing timestep-conditioning issue.
@@ -29,6 +31,16 @@ fused full PSNR      = 17.00 dB
 fused full Occ-IoU   = 0.2554
 ```
 
+The copied figures and metric summary for this exact run are in:
+
+```text
+results/METRICS_SUMMARY.md
+results/figures/prediction_samples/
+results/figures/training_curves_diffusion_seed42.png
+results/figures/diffusion_v3_curve.png
+results/figures/channel_split_diffusion.png
+```
+
 ## Files
 
 ```text
@@ -39,6 +51,8 @@ unet.py                        denoiser backbone with timestep support
 configs/shared_loss_optuna.json
 scripts/run_final_seed42.ps1
 TRAINING_DETAILS.md
+results/METRICS_SUMMARY.md
+results/figures/
 ```
 
 ## Run

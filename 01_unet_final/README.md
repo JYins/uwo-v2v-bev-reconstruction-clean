@@ -17,6 +17,8 @@ results/seed42/
 results/seed43/
 results/seed44/
 results/summary/unet_optuna_3seed_summary.json
+results/METRICS_SUMMARY.md
+results/figures/
 ```
 
 ## Why This Is Final
@@ -29,9 +31,12 @@ results/summary/unet_optuna_3seed_summary.json
 Final 3-seed result:
 
 ```text
-masked Occ-IoU   = 0.1494 +/- 0.0019
-masked RMSE      = 0.05595 +/- 0.00008
-fused full PSNR  = 33.66 +/- 0.01 dB
+masked Occ-IoU   = 0.1494 +/- 0.0023
+masked precision = 0.2009 +/- 0.0046
+masked recall    = 0.3684 +/- 0.0056
+masked F1        = 0.2600 +/- 0.0035
+masked RMSE      = 0.05595 +/- 0.00010
+fused full PSNR  = 33.66 +/- 0.02 dB
 ```
 
 ## Files
@@ -44,6 +49,8 @@ tune_unet_optuna.py       loss-weight Optuna search
 configs/                  final shared loss config
 scripts/run_3seeds.ps1    exact final rerun script
 TRAINING_DETAILS.md       detailed hyperparameters and rationale
+results/METRICS_SUMMARY.md final metrics table with precision/recall/F1
+results/figures/          prediction samples, thresholded samples, channel splits, curves
 ```
 
 ## Run

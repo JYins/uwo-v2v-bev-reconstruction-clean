@@ -1,43 +1,33 @@
 {
   "runs": [
     {
-      "run_root": "D:\\MEng_Project\\training_unet_optuna_seed42",
-      "config": {
-        "epochs": 80,
-        "batch_size": 12,
-        "features": [
-          16,
-          32,
-          64,
-          128
-        ],
-        "lr": 0.0001,
-        "seed": 42,
-        "loss_l1_weight": 0.8082426103528428,
-        "loss_mse_weight": 0.19175738964715716,
-        "occ_weight": 2.7593891857986734,
-        "occ_threshold": 0.07,
-        "occ_bce_weight": 0.27840993525472485,
-        "occ_pos_weight": 8,
-        "occ_logit_temp": 0.03
-      },
-      "best_epoch": 21,
+      "seed": 42,
+      "checkpoint_epoch": 21,
       "test_metrics": {
         "masked_mae": 0.008347048625560998,
         "masked_mse": 0.0031227681138826647,
         "masked_rmse": 0.05588173327557642,
         "masked_psnr": 25.054602638005953,
         "masked_occ_iou": 0.15003829002039507,
+        "masked_occ_precision": 0.200208851585239,
+        "masked_occ_recall": 0.37450642414212487,
+        "masked_occ_f1": 0.2609274688023374,
         "full_mae": 0.005164396615693991,
         "full_mse": 0.0018737485674960015,
         "full_rmse": 0.04328681747941285,
         "full_psnr": 27.2728868616705,
         "full_occ_iou": 0.4328490546855505,
+        "full_occ_precision": 0.671284718204859,
+        "full_occ_recall": 0.5492714850291379,
+        "full_occ_f1": 0.6041795585795916,
         "fused_full_mae": 0.0011473853040696147,
         "fused_full_mse": 0.0004292557049343111,
         "fused_full_rmse": 0.020718487032945022,
         "fused_full_psnr": 33.67283924227554,
         "fused_full_occ_iou": 0.7502214497902128,
+        "fused_full_occ_precision": 0.8098606431204045,
+        "fused_full_occ_recall": 0.9106145979860227,
+        "fused_full_occ_f1": 0.8572874591156869,
         "per_layer_masked_mae": [
           0.016056551869735182,
           0.010195870823103683,
@@ -78,46 +68,37 @@
           0.04863972046735094,
           0.03208037029588104
         ]
-      }
+      },
+      "source": "01_unet_final/results/seed42/test_metrics_refresh.json"
     },
     {
-      "run_root": "D:\\MEng_Project\\training_unet_optuna_seed43",
-      "config": {
-        "epochs": 80,
-        "batch_size": 12,
-        "features": [
-          16,
-          32,
-          64,
-          128
-        ],
-        "lr": 0.0001,
-        "seed": 43,
-        "loss_l1_weight": 0.8082426103528428,
-        "loss_mse_weight": 0.19175738964715716,
-        "occ_weight": 2.7593891857986734,
-        "occ_threshold": 0.07,
-        "occ_bce_weight": 0.27840993525472485,
-        "occ_pos_weight": 8,
-        "occ_logit_temp": 0.03
-      },
-      "best_epoch": 24,
+      "seed": 43,
+      "checkpoint_epoch": 24,
       "test_metrics": {
         "masked_mae": 0.008662622177262573,
         "masked_mse": 0.003123888162188158,
         "masked_rmse": 0.05589175397308764,
         "masked_psnr": 25.053045226225137,
         "masked_occ_iou": 0.1468938929893705,
+        "masked_occ_precision": 0.1967052983486643,
+        "masked_occ_recall": 0.3671223168160154,
+        "masked_occ_f1": 0.2561595172618675,
         "full_mae": 0.007082150969310556,
         "full_mse": 0.0031431549392600664,
         "full_rmse": 0.05606384698948215,
         "full_psnr": 25.026342102623545,
         "full_occ_iou": 0.18008671335321114,
+        "full_occ_precision": 0.4642797567305813,
+        "full_occ_recall": 0.2273240449237502,
+        "full_occ_f1": 0.30520928897080035,
         "fused_full_mae": 0.0011907640444865134,
         "fused_full_mse": 0.0004294096667743842,
         "fused_full_rmse": 0.0207222022665156,
         "fused_full_psnr": 33.67128183049473,
         "fused_full_occ_iou": 0.7490732028439322,
+        "fused_full_occ_precision": 0.8093564385805054,
+        "fused_full_occ_recall": 0.9095593810703999,
+        "fused_full_occ_f1": 0.8565372811451976,
         "per_layer_masked_mae": [
           0.016094069171628495,
           0.008710303308798094,
@@ -158,46 +139,37 @@
           0.048132051177099115,
           0.03194356786971069
         ]
-      }
+      },
+      "source": "01_unet_final/results/seed43/test_metrics_refresh.json"
     },
     {
-      "run_root": "D:\\MEng_Project\\training_unet_optuna_seed44",
-      "config": {
-        "epochs": 80,
-        "batch_size": 12,
-        "features": [
-          16,
-          32,
-          64,
-          128
-        ],
-        "lr": 0.0001,
-        "seed": 44,
-        "loss_l1_weight": 0.8082426103528428,
-        "loss_mse_weight": 0.19175738964715716,
-        "occ_weight": 2.7593891857986734,
-        "occ_threshold": 0.07,
-        "occ_bce_weight": 0.27840993525472485,
-        "occ_pos_weight": 8,
-        "occ_logit_temp": 0.03
-      },
-      "best_epoch": 21,
+      "seed": 44,
+      "checkpoint_epoch": 21,
       "test_metrics": {
         "masked_mae": 0.00838120133831545,
         "masked_mse": 0.003143054874201399,
         "masked_rmse": 0.056062954561826285,
         "masked_psnr": 25.026480366232633,
         "masked_occ_iou": 0.1513482976231947,
+        "masked_occ_precision": 0.2058948912275809,
+        "masked_occ_recall": 0.36357963273831323,
+        "masked_occ_f1": 0.2629061908297135,
         "full_mae": 0.006575792416034245,
         "full_mse": 0.002708743320616298,
         "full_rmse": 0.052045588867994354,
         "full_psnr": 25.67232146580501,
         "full_occ_iou": 0.31069841045566937,
+        "full_occ_precision": 0.5978554647748168,
+        "full_occ_recall": 0.3927868354656485,
+        "full_occ_f1": 0.4740959597984923,
         "fused_full_mae": 0.0011520799359648417,
         "fused_full_mse": 0.0004320443230077243,
         "fused_full_rmse": 0.02078567590933055,
         "fused_full_psnr": 33.64471697050222,
         "fused_full_occ_iou": 0.7572982407974724,
+        "fused_full_occ_precision": 0.8193779654424709,
+        "fused_full_occ_recall": 0.9090531180923036,
+        "fused_full_occ_f1": 0.8618892607026182,
         "per_layer_masked_mae": [
           0.014476102998525335,
           0.009392094016970168,
@@ -238,13 +210,26 @@
           0.049286311003849746,
           0.03186295353352127
         ]
-      }
+      },
+      "source": "01_unet_final/results/seed44/test_metrics_refresh.json"
     }
   ],
   "aggregate": {
     "masked_occ_iou": {
       "mean": 0.14942682687765343,
       "std": 0.0022892893092960665
+    },
+    "masked_occ_precision": {
+      "mean": 0.20093634705382807,
+      "std": 0.004637789512544948
+    },
+    "masked_occ_recall": {
+      "mean": 0.3684027912321512,
+      "std": 0.005574800771631812
+    },
+    "masked_occ_f1": {
+      "mean": 0.25999772563130613,
+      "std": 0.003468100031836963
     },
     "masked_rmse": {
       "mean": 0.05594548060349678,
@@ -254,10 +239,6 @@
       "mean": 0.00846362404704634,
       "std": 0.0001731813899334726
     },
-    "masked_psnr": {
-      "mean": 25.044709410154574,
-      "std": 0.015806008812942286
-    },
     "fused_full_psnr": {
       "mean": 33.662946014424165,
       "std": 0.015806008812942286
@@ -266,9 +247,17 @@
       "mean": 0.7521976311438725,
       "std": 0.004454411508965976
     },
-    "full_psnr": {
-      "mean": 25.990516810033018,
-      "std": 1.1565798919299182
+    "fused_full_occ_precision": {
+      "mean": 0.8128650157144602,
+      "std": 0.005646011085200663
+    },
+    "fused_full_occ_recall": {
+      "mean": 0.9097423657162421,
+      "std": 0.000796660153442336
+    },
+    "fused_full_occ_f1": {
+      "mean": 0.8585713336545009,
+      "std": 0.002897787374760803
     }
   }
 }

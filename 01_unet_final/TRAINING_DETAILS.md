@@ -97,9 +97,12 @@ python .\01_unet_final\train.py `
 3-seed summary:
 
 ```text
-masked Occ-IoU   = 0.1494 +/- 0.0019
-masked RMSE      = 0.05595 +/- 0.00008
-fused full PSNR  = 33.66 +/- 0.01 dB
+masked Occ-IoU   = 0.1494 +/- 0.0023
+masked precision = 0.2009 +/- 0.0046
+masked recall    = 0.3684 +/- 0.0056
+masked F1        = 0.2600 +/- 0.0035
+masked RMSE      = 0.05595 +/- 0.00010
+fused full PSNR  = 33.66 +/- 0.02 dB
 ```
 
 Seed 42 test:
@@ -113,6 +116,8 @@ masked RMSE          = 0.05588
 fused full PSNR      = 33.67 dB
 fused full Occ-IoU   = 0.7502
 ```
+
+See `results/METRICS_SUMMARY.md` for the full seed42/43/44 table.
 
 ## Known Limitation
 

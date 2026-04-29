@@ -5,11 +5,11 @@
 The final diffusion model is conditional BEV reconstruction:
 
 ```text
-condition = masked ego BEV + neighbor BEV + mask
+condition = masked ego BEV + neighbor BEV
 target    = clean ego BEV
 ```
 
-During training, noise is added to the target BEV and the model predicts the noise. The estimated clean sample `x0_hat` also receives the shared reconstruction loss.
+During training, noise is added to the target BEV and the model predicts the noise. The estimated clean sample `x0_hat` also receives the shared reconstruction loss. The sector mask is still used for the masked loss and masked metrics; it is just not concatenated as a model input channel in the confirmed v3 checkpoint.
 
 ## What Was Fixed Compared With Old Diffusion Runs
 
@@ -36,6 +36,8 @@ Final v3 fixes this with:
 | lr | 5e-5 | Lower than U-Net because diffusion training was less stable. |
 | min_lr | 5e-6 | Cosine-style decay floor in the script. |
 | timesteps | 1000 | Standard DDPM-style training horizon. |
+| condition_channels | 16 | Final v3 uses masked ego + neighbor as the condition. |
+| model_input_channels | 24 | `x_t(8ch) + condition(16ch)`, matching the confirmed checkpoint. |
 | sample_steps | 25 | Faster DDIM-style evaluation. |
 | val_every | 10 | Sampling evaluation is expensive. |
 | warmup_epochs | 2 | Avoids sharp early LR jump. |
@@ -84,3 +86,5 @@ python .\03_diffusion_final\train_diffusion.py `
 ## Final Diagnosis
 
 Diffusion v3 predicts too much of the masked region as occupied. That gives recall `1.0`, but precision collapses. The result is useful because it is a corrected negative baseline, not because it is competitive.
+
+See `results/METRICS_SUMMARY.md` and `results/figures/` for the copied metric table and prediction samples.

@@ -1,0 +1,13 @@
+diffusion v3 DDIM prediction samples
+checkpoint: D:\MEng_Project\03_diffusion_final\local_runs\training_diffusion_full_seed42_v3\checkpoints\best_diffusion.pth
+epoch: 30
+sample_steps: 25
+
+test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png
+test_01_testoutput_CAV_data_2022-03-15-10-29-43_4_000023.png
+test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png
+test_02_testoutput_CAV_data_2022-03-17-11-02-23_1_000070.png
+test_03_testoutput_CAV_data_2022-03-17-11-02-23_2_000045.png
+test_03_testoutput_CAV_data_2022-03-17-11-51-42_0_000025.png
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000374.png

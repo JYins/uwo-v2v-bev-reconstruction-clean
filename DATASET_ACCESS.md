@@ -9,13 +9,25 @@ dataset_prepared/  151.7 GB
 V2V4Real/            2.4 GB
 ```
 
-## Google Drive Placeholder
+## Google Drive Copy
 
-Put the shared dataset link here after upload:
+On 2026-04-29, I copied the processed dataset into the local Google Drive Desktop folder:
 
 ```text
-Google Drive dataset_prepared link: TODO
-Google Drive raw V2V4Real link: TODO, optional
+G:\我的云端硬盘\uwo-v2v-bev-reconstruction-dataset\dataset_prepared
+```
+
+Local copy check:
+
+```text
+dataset_prepared/  39429 files, 151.73 GB
+```
+
+After Google Drive finishes cloud sync, share the folder from the Drive web UI and put the link here:
+
+```text
+Google Drive dataset_prepared link: TODO after Drive sync/share
+Google Drive raw V2V4Real link: optional
 ```
 
 Upload helper after `rclone` is configured:

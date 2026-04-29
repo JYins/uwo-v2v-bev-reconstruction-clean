@@ -78,6 +78,22 @@ python .\02_pix2pix_final\train_pix2pix.py `
 
 Large adversarial weights made the model care too much about fooling the discriminator and not enough about reconstructing the masked sector accurately. The search result selected `lambda_adv=0.1`, which keeps the GAN term as a gentle sharpness pressure instead of the main training signal.
 
+## Final Results
+
+Seed 42 test:
+
+```text
+masked Occ-IoU       = 0.1317
+masked precision     = 0.2701
+masked recall        = 0.2044
+masked F1            = 0.2327
+masked RMSE          = 0.061386
+fused full PSNR      = 32.86 dB
+fused full Occ-IoU   = 0.8215
+```
+
+See `results/METRICS_SUMMARY.md` and `results/figures/` for the copied result tables and images.
+
 ## Known Limitation
 
 Pix2Pix is more conservative than U-Net: its precision is higher, but recall is lower. It does not beat the U-Net final baseline.

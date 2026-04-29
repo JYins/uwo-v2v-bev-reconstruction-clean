@@ -33,6 +33,16 @@ fused full PSNR      = 32.86 dB
 fused full Occ-IoU   = 0.8215
 ```
 
+The copied figures and metric summary for this exact run are in:
+
+```text
+results/METRICS_SUMMARY.md
+results/figures/prediction_samples/
+results/figures/thresholded_samples/
+results/figures/training_curves_pix2pix_seed42.png
+results/figures/channel_split_pix2pix.png
+```
+
 ## Files
 
 ```text
@@ -45,6 +55,8 @@ configs/shared_loss_optuna.json
 configs/pix2pix_adv_best.json
 scripts/run_seed42.ps1
 TRAINING_DETAILS.md
+results/METRICS_SUMMARY.md
+results/figures/
 ```
 
 ## Run

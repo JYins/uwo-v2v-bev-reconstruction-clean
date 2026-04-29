@@ -52,7 +52,6 @@ def parse_args():
     p.add_argument("--warmup_epochs", type=int, default=2)
     p.add_argument("--max_train_steps", type=int, default=0)
     p.add_argument("--max_eval_batches", type=int, default=0)
-    p.add_argument("--lambda_x0", type=float, default=1.0)
     p.add_argument("--shared_config", type=Path, default=None)
     p.add_argument("--loss_l1_weight", type=float, default=0.7)
     p.add_argument("--loss_mse_weight", type=float, default=0.3)
@@ -97,12 +96,9 @@ def masked_noise_l1(pred_noise, noise, mask):
 
 
 def make_condition(inp, mask):
-    return torch.cat([inp, mask], dim=1)
-
-
-def fuse_visible(pred, visible_bev, mask):
-    occluded = 1.0 - mask
-    return pred * occluded + visible_bev * mask
+    # Final v3 checkpoint was trained with the 16-channel BEV condition only.
+    # The mask is still used for loss and metrics, just not concatenated here.
+    return inp
 
 
 def make_sampling_schedule(timesteps, sample_steps):
@@ -125,17 +121,13 @@ def make_sampling_schedule(timesteps, sample_steps):
 def ddim_sample(model, cond, mask, alpha_bar, timesteps, sample_steps):
     bsz = cond.shape[0]
     device = cond.device
-    visible_bev = cond[:, :8]
-    occluded = 1.0 - mask
     sample_schedule = make_sampling_schedule(timesteps, sample_steps)
     x = torch.randn(bsz, 8, cond.shape[2], cond.shape[3], device=device)
-    x = fuse_visible(x, visible_bev, mask)
 
     for idx, t_now in enumerate(sample_schedule):
         t_batch = torch.full((bsz,), t_now, device=device, dtype=torch.long)
         pred_noise = model(torch.cat([x, cond], dim=1), timesteps=t_batch)
         x0_hat = estimate_x0(x, pred_noise, t_batch, alpha_bar).clamp(0.0, 1.0)
-        x0_hat = fuse_visible(x0_hat, visible_bev, mask)
         if idx == len(sample_schedule) - 1:
             x = x0_hat
             break
@@ -143,7 +135,6 @@ def ddim_sample(model, cond, mask, alpha_bar, timesteps, sample_steps):
         t_prev = sample_schedule[idx + 1]
         a_prev = alpha_bar[t_prev].view(-1, 1, 1, 1)
         x = torch.sqrt(a_prev) * x0_hat + torch.sqrt(1.0 - a_prev) * pred_noise
-        x = x * occluded + visible_bev * mask
 
     return x.clamp(0.0, 1.0)
 
@@ -288,9 +279,9 @@ def main():
         seed=args.seed,
     )
 
-    # input: x_t (8ch) + condition (masked ego 8ch + neighbor 8ch + mask 1ch) = 25 channels
+    # input: x_t (8ch) + condition (masked ego 8ch + neighbor 8ch) = 24 channels
     model = UNet(
-        in_channels=25,
+        in_channels=24,
         out_channels=8,
         features=[16, 32, 64, 128],
         time_emb_dim=128,
@@ -316,7 +307,7 @@ def main():
         f"seed={args.seed} amp={use_amp} sample_steps={args.sample_steps} "
         f"val_every={args.val_every} start_epoch={start_epoch} "
         f"lr={args.lr} min_lr={args.min_lr} warmup={args.warmup_epochs} "
-        f"grad_clip={args.grad_clip} lambda_x0={args.lambda_x0}"
+        f"grad_clip={args.grad_clip}"
     )
 
     for epoch in range(start_epoch, args.epochs + 1):
@@ -336,14 +327,11 @@ def main():
             inp = inp.to(device, non_blocking=True)    # 16ch
             x0 = tgt.to(device, non_blocking=True)     # 8ch
             mask = mask.to(device, non_blocking=True)
-            cond = make_condition(inp, mask)           # 17ch
-            visible_bev = inp[:, :8]
-            occluded = 1.0 - mask
+            cond = make_condition(inp, mask)           # 16ch
 
             t_idx = torch.randint(0, args.timesteps, (x0.shape[0],), device=device)
             noise = torch.randn_like(x0)
             x_t = q_sample(x0, t_idx, noise, alpha_bar)
-            x_t = x_t * occluded + visible_bev * mask
             model_in = torch.cat([x_t, cond], dim=1)
 
             opt.zero_grad(set_to_none=True)
@@ -351,7 +339,6 @@ def main():
                 pred_noise = model(model_in, timesteps=t_idx)
                 noise_loss = masked_noise_l1(pred_noise, noise, mask)
                 x0_hat = estimate_x0(x_t, pred_noise, t_idx, alpha_bar).clamp(0.0, 1.0)
-                x0_hat = fuse_visible(x0_hat, visible_bev, mask)
                 shared_loss, shared_parts = compute_shared_loss(
                     x0_hat,
                     x0,
@@ -367,7 +354,7 @@ def main():
                     args.occ_pos_weight,
                     args.occ_logit_temp,
                 )
-                loss = noise_loss + args.lambda_x0 * shared_loss
+                loss = noise_loss + shared_loss
             scaler.scale(loss).backward()
             if args.grad_clip > 0:
                 scaler.unscale_(opt)
@@ -517,7 +504,6 @@ def main():
             "warmup_epochs": args.warmup_epochs,
             "max_train_steps": args.max_train_steps,
             "max_eval_batches": args.max_eval_batches,
-            "lambda_x0": args.lambda_x0,
             "grad_clip": args.grad_clip,
             "seed": args.seed,
             "resume": str(resume_path) if resume_path else None,
@@ -534,9 +520,9 @@ def main():
             "occ_threshold": args.occ_threshold,
             "amp": use_amp,
             "denoiser_final_activation": "identity",
-            "condition_channels": 17,
-            "model_input_channels": 25,
-            "inpainting_visible_region": "preserved",
+            "condition_channels": 16,
+            "model_input_channels": 24,
+            "inpainting_visible_region": "not hard-preserved during sampling",
         },
         "time_minutes": total_min,
         "best_epoch": best_epoch,

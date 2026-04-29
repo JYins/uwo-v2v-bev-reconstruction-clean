@@ -13,7 +13,6 @@ import numpy as np
 import torch
 
 from dataset import BEVReconstructionDataset, discover_available_splits
-from train_diffusion import alpha_bar_schedule, estimate_x0, q_sample
 from unet import UNet
 from visualize_4columns import bev_to_color
 
@@ -32,7 +31,7 @@ def parse_thresholds(text):
 
 def parse_args():
     p = argparse.ArgumentParser(description="Render thresholded occupancy panels.")
-    p.add_argument("--model_kind", choices=["unet", "pix2pix", "diffusion"], required=True)
+    p.add_argument("--model_kind", choices=["unet", "pix2pix"], required=True)
     p.add_argument("--dataset_root", type=Path, default=DEFAULT_DATASET_ROOT)
     p.add_argument("--training_root", type=Path, required=True)
     p.add_argument("--checkpoint", type=Path, default=None)
@@ -57,30 +56,15 @@ def load_run_config(training_root: Path):
 
 def load_checkpoint(model_kind, checkpoint_path: Path, device, features):
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
-    if model_kind == "diffusion":
-        model = UNet(in_channels=24, out_channels=8, features=features).to(device)
-        model.load_state_dict(ckpt["model"])
-    else:
-        model = UNet(in_channels=16, out_channels=8, features=features).to(device)
-        state_key = "generator" if model_kind == "pix2pix" else "model_state_dict"
-        model.load_state_dict(ckpt[state_key])
+    model = UNet(in_channels=16, out_channels=8, features=features).to(device)
+    state_key = "generator" if model_kind == "pix2pix" else "model_state_dict"
+    model.load_state_dict(ckpt[state_key])
     model.eval()
     return model, ckpt
 
 
 def predict_tensor(model, model_kind, inp_batch, device, timesteps):
     with torch.no_grad():
-        if model_kind == "diffusion":
-            cond = inp_batch.to(device)
-            x0_shape = (cond.shape[0], 8, cond.shape[2], cond.shape[3])
-            x0_dummy = torch.zeros(x0_shape, device=device)
-            t_idx = torch.full((cond.shape[0],), timesteps - 1, device=device, dtype=torch.long)
-            alpha_bar = alpha_bar_schedule(timesteps, device)
-            noise = torch.randn_like(x0_dummy)
-            x_t = q_sample(x0_dummy, t_idx, noise, alpha_bar)
-            pred_noise = model(torch.cat([x_t, cond], dim=1))
-            pred = estimate_x0(x_t, pred_noise, t_idx, alpha_bar).clamp(0.0, 1.0)
-            return pred
         return model(inp_batch.to(device))
 
 

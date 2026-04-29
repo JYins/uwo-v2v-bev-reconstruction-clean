@@ -2,6 +2,14 @@
 
 This folder keeps the visual evidence from the completed BEV reconstruction experiments.
 
+For model-specific review, start with the figure manifests inside each final folder:
+
+```text
+01_unet_final/results/figures/FIGURE_MANIFEST.md
+02_pix2pix_final/results/figures/FIGURE_MANIFEST.md
+03_diffusion_final/results/figures/FIGURE_MANIFEST.md
+```
+
 ## Final Results Figures
 
 - `results/figures/final_results/channel_split_diffusion.png`

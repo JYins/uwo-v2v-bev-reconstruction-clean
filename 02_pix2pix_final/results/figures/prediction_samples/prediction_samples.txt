@@ -1,0 +1,13 @@
+pix2pix prediction samples
+Checkpoint: D:\MEng_Project\02_pix2pix_final\local_runs\training_pix2pix_full_seed42\checkpoints\best_pix2pix.pth
+Epoch: 21
+Num images: 8
+
+test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png: masked_mse=0.001786
+test_01_testoutput_CAV_data_2022-03-15-10-29-43_4_000023.png: masked_mse=0.001632
+test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png: masked_mse=0.003161
+test_02_testoutput_CAV_data_2022-03-17-11-02-23_1_000070.png: masked_mse=0.003609
+test_03_testoutput_CAV_data_2022-03-17-11-02-23_2_000045.png: masked_mse=0.003817
+test_03_testoutput_CAV_data_2022-03-17-11-51-42_0_000025.png: masked_mse=0.005785
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png: masked_mse=0.002866
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000374.png: masked_mse=0.002917

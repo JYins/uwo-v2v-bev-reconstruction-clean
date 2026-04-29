@@ -8,6 +8,7 @@ Evidence:
 
 - Local run folders: `01_unet_final/local_runs/training_unet_optuna_seed42`, `01_unet_final/local_runs/training_unet_optuna_seed43`, `01_unet_final/local_runs/training_unet_optuna_seed44`
 - Clean copied metrics: `01_unet_final/results/`
+- Figure summary: `01_unet_final/results/figures/FIGURE_MANIFEST.md`
 - Shared loss config: `01_unet_final/configs/shared_loss_optuna.json`
 - Summary: `01_unet_final/results/summary/unet_optuna_3seed_summary.json`
 
@@ -29,6 +30,7 @@ Evidence:
 
 - Local run folder: `02_pix2pix_final/local_runs/training_pix2pix_full_seed42`
 - Clean copied metrics: `02_pix2pix_final/results/seed42/`
+- Figure summary: `02_pix2pix_final/results/figures/FIGURE_MANIFEST.md`
 - Adversarial search result: `02_pix2pix_final/configs/pix2pix_adv_best.json`
 
 Final setup:
@@ -50,6 +52,7 @@ Evidence:
 
 - Local run folder: `03_diffusion_final/local_runs/training_diffusion_full_seed42_v3`
 - Clean copied metrics: `03_diffusion_final/results/seed42/`
+- Figure summary: `03_diffusion_final/results/figures/FIGURE_MANIFEST.md`
 
 Final setup:
 
@@ -62,6 +65,8 @@ timesteps = 1000
 sample_steps = 25
 warmup_epochs = 2
 grad_clip = 1.0
+condition_channels = 16
+model_input_channels = 24
 seed = 42
 ```
 

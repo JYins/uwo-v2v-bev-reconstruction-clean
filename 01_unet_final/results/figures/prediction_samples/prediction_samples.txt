@@ -1,0 +1,13 @@
+unet prediction samples
+Checkpoint: D:\MEng_Project\01_unet_final\local_runs\training_unet_optuna_seed42\checkpoints\best_unet.pth
+Epoch: 21
+Num images: 8
+
+test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png: masked_mse=0.001542
+test_01_testoutput_CAV_data_2022-03-15-10-29-43_4_000023.png: masked_mse=0.001191
+test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png: masked_mse=0.002423
+test_02_testoutput_CAV_data_2022-03-17-11-02-23_1_000070.png: masked_mse=0.002794
+test_03_testoutput_CAV_data_2022-03-17-11-02-23_2_000045.png: masked_mse=0.003133
+test_03_testoutput_CAV_data_2022-03-17-11-51-42_0_000025.png: masked_mse=0.004638
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png: masked_mse=0.002289
+test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000374.png: masked_mse=0.002368
