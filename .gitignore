@@ -114,3 +114,4 @@ training_unet_layerprobe_smoke_seed42_v5/
 
 # Local exports
 output/
+upload_logs/
