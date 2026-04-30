@@ -4,6 +4,7 @@
 uwo-v2v-bev-reconstruction-clean/
 |-- teacher_overview.html          visual summary for the meeting
 |-- DATASET_ACCESS.md              processed dataset location and Drive notes
+|-- DATASET_SANITY_CHECK.md        processed dataset count and tensor-shape check
 |-- 00_data_pipeline/              raw V2V4Real -> prepared BEV tensors
 |-- 01_unet_final/                 final 3-seed U-Net baseline
 |   |-- README.md
@@ -43,6 +44,7 @@ Dataset:
 - Splits used in the final experiments: 7105 train samples, 748 validation samples, and 1993 test samples.
 - Processed dataset size: 39429 files, about 151.73 GB.
 - Google Drive link: https://drive.google.com/drive/folders/1nQuA6qQhK8wcshwI5CHk5BQDv4R4eAPs?usp=sharing
+- Sanity check: `DATASET_SANITY_CHECK.md`
 
 Literature and proposal notes:
 

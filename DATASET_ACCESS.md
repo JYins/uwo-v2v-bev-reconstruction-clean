@@ -50,6 +50,12 @@ dataset_prepared/
 
 This is the exact folder needed by the training scripts.
 
+For the checked file counts and tensor shapes, see:
+
+```text
+DATASET_SANITY_CHECK.md
+```
+
 ## Expected Local Structure
 
 The repo expects the processed dataset at:
