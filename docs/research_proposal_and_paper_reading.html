@@ -56,20 +56,28 @@
   </table>
 
   <h2>Paper Reading Map</h2>
-  <h3>V2V / V2X Perception</h3>
-  <ul>
-    <li><strong>V2V4Real:</strong> real-world V2V dataset and benchmark used by this project.</li>
-    <li><strong>V2X-ViT:</strong> strong transformer-based cooperative perception baseline.</li>
-    <li><strong>CoBEVT:</strong> strong cooperative BEV baseline for perception accuracy comparison.</li>
-    <li><strong>V2U4Real and V2X-Radar:</strong> recent extensions showing that this dataset ecosystem is still active.</li>
-  </ul>
+  <p>The detailed paper notes and downloaded-paper manifest are in <a href="literature/README.md">docs/literature/README.md</a>. The short version is below.</p>
 
-  <h3>Reconstruction / Representation</h3>
-  <ul>
-    <li><strong>CORE:</strong> closest conceptual reference around cooperative reconstruction, but reconstructs BEV features rather than explicit point-cloud geometry.</li>
-    <li><strong>BEV-MAE:</strong> supports the idea that BEV-guided masked reconstruction can help 3D understanding.</li>
-    <li><strong>CoCMT:</strong> extreme communication-efficient object-query baseline; useful contrast because this project keeps more geometric context.</li>
-  </ul>
+  <table>
+    <tr><th>Paper / Resource</th><th>Main Idea</th><th>How It Connects To This Project</th></tr>
+    <tr><td>V2V4Real</td><td>Real-world V2V cooperative perception dataset and benchmark.</td><td>This is the dataset source. The prepared data in this repo are 8-channel 500 x 500 BEV tensors derived from it.</td></tr>
+    <tr><td>V2X-ViT</td><td>Transformer-based cooperative perception with intermediate feature fusion.</td><td>High-accuracy feature-sharing reference for future AP comparison.</td></tr>
+    <tr><td>CoBEVT</td><td>Cooperative BEV perception using sparse Transformer-style fusion.</td><td>Useful accuracy baseline; also shows the mainstream route of transmitting/fusing learned features.</td></tr>
+    <tr><td>CORE</td><td>Cooperative reconstruction for multi-agent perception.</td><td>Closest conceptual reference. CORE reconstructs feature/observation representations; this project reconstructs explicit BEV geometry.</td></tr>
+    <tr><td>BEV-MAE</td><td>BEV-guided masked autoencoding for LiDAR point-cloud pre-training.</td><td>Supports the reconstruction direction and motivates Chamfer Distance if the work extends back to point clouds.</td></tr>
+    <tr><td>CoCMT</td><td>Object-query communication for very low-bandwidth collaborative perception.</td><td>Strong bandwidth baseline. The contrast is that object queries save communication but discard more scene context.</td></tr>
+  </table>
+
+  <h2>Benchmark Story</h2>
+  <p>The project should be framed as an AP, bandwidth, and reconstruction-quality trade-off. V2X-ViT and CoBEVT represent high-accuracy feature fusion. CoCMT represents extremely low-bandwidth object-query sharing. This project sits between them: a compact multi-height BEV message that keeps physical scene geometry and can be inspected visually.</p>
+
+  <table>
+    <tr><th>What To Report</th><th>Metrics</th><th>Status In This Repo</th></tr>
+    <tr><td>Reconstruction quality</td><td>Masked Occ-IoU, precision, recall, F1, RMSE, PSNR</td><td>Reported for U-Net, Pix2Pix, and Diffusion v3.</td></tr>
+    <tr><td>Communication</td><td>MB/frame or bitrate</td><td>Representation is fixed; final comparison table should calculate the compact BEV message size against feature/query baselines.</td></tr>
+    <tr><td>Detection</td><td>AP@0.5 and AP@0.7</td><td>Future detector stage. The current repo does not claim final detection AP.</td></tr>
+    <tr><td>Point-cloud geometry</td><td>Chamfer Distance</td><td>Future metric if BEV reconstruction is converted back to point cloud reconstruction.</td></tr>
+  </table>
 
   <h2>Current Experiment Link</h2>
   <p>The current repo does not yet claim final BEV-to-point-cloud detection AP. The confirmed completed contribution is a clean comparison of U-Net, Pix2Pix, and corrected Diffusion v3 for masked 8-channel BEV reconstruction on V2V4Real-derived data.</p>

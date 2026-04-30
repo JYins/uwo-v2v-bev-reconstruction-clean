@@ -2,7 +2,7 @@
 """
 Render a few final diffusion v3 prediction panels.
 
-This is intentionally just a small helper for the supervisor-facing figures.
+This is intentionally just a small helper for the report figures.
 It uses the same DDIM-style sampler as train_diffusion.py, not the older proxy
 check that I used while debugging the first diffusion attempts.
 """

@@ -54,3 +54,23 @@ The following papers provide the academic foundation and competitive baselines f
   *Relevance:* Proves that autoencoders can successfully reconstruct masked 3D points guided by BEV representations to improve downstream 3D detection. This validates the feasibility of our "BEV to Point Cloud" reconstruction pipeline, albeit BEV-MAE is for single-vehicle pre-training, not V2V communication.  
 * **7\. CoCMT: Communication-Efficient Cooperative Perception via Object Queries (2024/2025)**  
   *Relevance:* The extreme baseline for bandwidth efficiency. It transmits only object queries rather than dense features. We will contrast our method against CoCMT, arguing that while they achieve extreme compression, our generative approach retains vital geometric context (drivable areas, unclassified obstacles) that object queries discard.
+
+## **6\. Paper Reading Notes For This Repo**
+
+The downloaded PDFs are organized in `docs/literature/README.md`. The practical reading is:
+
+| Paper | What it contributes | How it is used here |
+| :---- | :---- | :---- |
+| V2X-ViT | Strong Transformer-based cooperative perception with intermediate feature fusion. | A high-accuracy reference for feature-sharing methods. |
+| CoBEVT | Strong cooperative BEV fusion baseline. | Helps frame the accuracy side of the AP vs bandwidth trade-off. |
+| CORE | Cooperative reconstruction, but mainly in feature/observation space. | Closest conceptual reference; this project reconstructs explicit BEV geometry instead. |
+| BEV-MAE | BEV-guided masked reconstruction for LiDAR pre-training. | Supports the use of reconstruction objectives and Chamfer Distance in a later point-cloud version. |
+| CoCMT | Object-query communication with very low bandwidth; the abstract reports `0.416 Mb` on V2V4Real Top-50 queries. | The strongest bandwidth-saving reference; this project keeps more scene geometry instead of only object-level cues. |
+
+The main benchmark story should be written as a trade-off:
+
+* **AP@0.5 / AP@0.7:** needed later when the reconstructed output is connected to a detector.
+* **Communication cost:** the key comparison against feature-sharing methods.
+* **Reconstruction quality:** currently measured with masked Occ-IoU, precision, recall, F1, RMSE, and PSNR; Chamfer Distance should be added if the project moves from BEV reconstruction back to point-cloud reconstruction.
+
+The current repo does not claim final detection AP yet. It provides a clean, confirmed comparison of U-Net, Pix2Pix, and corrected Diffusion v3 on masked 8-channel BEV reconstruction.

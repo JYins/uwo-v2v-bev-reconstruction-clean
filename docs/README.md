@@ -9,6 +9,7 @@ final_results_report.html             final visual report
 final_results_report.md               markdown source for the final report
 research_proposal_and_paper_reading.html
 source_markdown/research_proposal_generative_v2v_3d_reconstruction.md
+literature/                           paper-reading notes and source manifest
 assets/                               images used by the final report HTML
 scripts/                              scripts that generated the reports
 ```

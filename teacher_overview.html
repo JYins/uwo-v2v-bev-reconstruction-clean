@@ -93,6 +93,7 @@
   <div class="grid">
     <div class="tile"><strong>Final report</strong><a href="docs/final_results_report.html">docs/final_results_report.html</a></div>
     <div class="tile"><strong>Proposal and paper notes</strong><a href="docs/research_proposal_and_paper_reading.html">docs/research_proposal_and_paper_reading.html</a></div>
+    <div class="tile"><strong>Literature map</strong><a href="docs/literature/README.md">docs/literature/README.md</a></div>
     <div class="tile"><strong>Dataset access</strong><a href="DATASET_ACCESS.md">DATASET_ACCESS.md</a></div>
     <div class="tile"><strong>All figures</strong><a href="results/FIGURE_MANIFEST.md">results/FIGURE_MANIFEST.md</a></div>
   </div>
@@ -122,7 +123,45 @@
       </tr>
       <tr>
         <th>Literature / proposal notes</th>
-        <td><a href="docs/research_proposal_and_paper_reading.html">docs/research_proposal_and_paper_reading.html</a> summarizes the proposal direction and paper reading, including V2V communication efficiency, BEV representation, cooperative perception, and the model choices used here.</td>
+        <td><a href="docs/research_proposal_and_paper_reading.html">docs/research_proposal_and_paper_reading.html</a> summarizes the proposal direction. <a href="docs/literature/README.md">docs/literature/README.md</a> gives the paper-reading map for V2V4Real, V2X-ViT, CoBEVT, CORE, BEV-MAE, and CoCMT.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Paper Map</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th>Papers</th>
+        <th>How They Frame This Project</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dataset and benchmark</td>
+        <td>V2V4Real</td>
+        <td>Real-world cooperative perception data; this repo uses processed 8-channel BEV tensors derived from that data.</td>
+      </tr>
+      <tr>
+        <td>High-accuracy cooperative perception</td>
+        <td>V2X-ViT, CoBEVT</td>
+        <td>Strong intermediate-fusion references. They are important for future AP comparison, but feature sharing has higher communication cost.</td>
+      </tr>
+      <tr>
+        <td>Closest reconstruction idea</td>
+        <td>CORE</td>
+        <td>Shows reconstruction is useful in cooperative perception; this repo reconstructs explicit BEV geometry rather than hidden features.</td>
+      </tr>
+      <tr>
+        <td>Reconstruction metric support</td>
+        <td>BEV-MAE</td>
+        <td>Supports BEV-guided masked reconstruction and motivates Chamfer Distance if the project extends to point-cloud reconstruction.</td>
+      </tr>
+      <tr>
+        <td>Low-bandwidth comparison</td>
+        <td>CoCMT</td>
+        <td>Object-query sharing is a strong communication baseline; this project keeps more geometric context instead of only object-level cues.</td>
       </tr>
     </tbody>
   </table>

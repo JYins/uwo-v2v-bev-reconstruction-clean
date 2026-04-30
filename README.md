@@ -25,7 +25,8 @@ uwo-v2v-bev-reconstruction-clean/
 |   |   |-- METRICS_SUMMARY.md
 |   |   `-- figures/
 |-- results/                       shared final tables, figures, and old report image archive
-|-- docs/                          final report HTML/markdown and proposal/literature page
+|-- docs/                          final report, proposal page, and literature notes
+|   `-- literature/                 paper-reading map and downloaded-paper manifest
 `-- old_versions/                  exploratory runs and runs not promoted as final
 ```
 
@@ -49,9 +50,11 @@ Dataset:
 Literature and proposal notes:
 
 - Main HTML page: `docs/research_proposal_and_paper_reading.html`
+- Literature map: `docs/literature/README.md`
 - Source markdown: `docs/source_markdown/research_proposal_generative_v2v_3d_reconstruction.md`
 - The notes connect the original longer direction, generative V2V 3D reconstruction, with the completed practical experiment: masked multi-height BEV reconstruction.
-- The reading notes cover the motivation for V2V communication efficiency, BEV representation, cooperative perception, and why U-Net / Pix2Pix / diffusion were used as the main model families.
+- The reading notes cover V2V4Real, V2X-ViT, CoBEVT, CORE, BEV-MAE, and CoCMT, with the main comparison logic: AP vs bandwidth vs reconstruction quality.
+- The downloaded paper PDFs were used locally for reading notes. The clean repo keeps links and summaries instead of copying full PDFs into Git.
 
 ## Main Result
 
