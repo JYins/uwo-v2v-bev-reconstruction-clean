@@ -1,6 +1,6 @@
 # Docs
 
-This folder keeps the supervisor-facing writeups separate from runnable code.
+This folder keeps the main writeups separate from runnable code.
 
 Important files:
 
@@ -13,4 +13,4 @@ assets/                               images used by the final report HTML
 scripts/                              scripts that generated the reports
 ```
 
-The root `teacher_overview.html` links to the main pages here. Personal prep notes are not kept in this clean supervisor repo.
+The root `teacher_overview.html` links to the main pages here. Personal prep notes are not kept in this clean repo.

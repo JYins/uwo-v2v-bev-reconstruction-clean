@@ -109,7 +109,7 @@ Then run one of:
 
 Training outputs go into each model folder's `local_runs/`. That folder is ignored by Git so checkpoints and large local artifacts do not end up in the repository.
 
-## Notes For Supervisor
+## Project Notes
 
 The repo is split into final code, final results, supporting docs, and old versions:
 

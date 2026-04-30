@@ -1,6 +1,6 @@
 # Results
 
-This folder keeps the supervisor-facing outputs that are small enough to live in Git.
+This folder keeps the final outputs that are small enough to live in Git.
 
 ```text
 figures/final_results/       final report figures
