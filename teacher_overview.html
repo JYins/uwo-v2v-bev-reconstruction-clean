@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>V2V BEV Reconstruction - Supervisor Overview</title>
+  <title>V2V BEV Reconstruction - Project Overview</title>
   <style>
     :root {
       color-scheme: light;
@@ -96,6 +96,32 @@
     <div class="tile"><strong>Dataset access</strong><a href="DATASET_ACCESS.md">DATASET_ACCESS.md</a></div>
     <div class="tile"><strong>All figures</strong><a href="results/FIGURE_MANIFEST.md">results/FIGURE_MANIFEST.md</a></div>
   </div>
+
+  <h2>Dataset And Reading Notes</h2>
+  <table>
+    <tbody>
+      <tr>
+        <th>Dataset</th>
+        <td>V2V4Real cooperative perception data, processed into 8-channel 500 x 500 BEV tensors for masked ego reconstruction.</td>
+      </tr>
+      <tr>
+        <th>Model input / target</th>
+        <td>Input is masked ego BEV plus neighbor BEV, 16 channels total. Target is clean ego BEV, 8 channels.</td>
+      </tr>
+      <tr>
+        <th>Final split size</th>
+        <td>7105 train samples, 748 validation samples, 1993 test samples. The processed dataset is about 151.73 GB.</td>
+      </tr>
+      <tr>
+        <th>Dataset link</th>
+        <td><a href="https://drive.google.com/drive/folders/1nQuA6qQhK8wcshwI5CHk5BQDv4R4eAPs?usp=sharing">Google Drive processed dataset folder</a></td>
+      </tr>
+      <tr>
+        <th>Literature / proposal notes</th>
+        <td><a href="docs/research_proposal_and_paper_reading.html">docs/research_proposal_and_paper_reading.html</a> summarizes the proposal direction and paper reading, including V2V communication efficiency, BEV representation, cooperative perception, and the model choices used here.</td>
+      </tr>
+    </tbody>
+  </table>
 
   <h2>Confirmed Final Runs</h2>
   <table>

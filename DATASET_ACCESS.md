@@ -23,10 +23,10 @@ Local copy check:
 dataset_prepared/  39429 files, 151.73 GB
 ```
 
-After Google Drive finishes cloud sync, share the folder from the Drive web UI and put the link here:
+Shared Google Drive folder:
 
 ```text
-Google Drive dataset_prepared link: TODO after Drive sync/share
+Google Drive dataset_prepared link: https://drive.google.com/drive/folders/1nQuA6qQhK8wcshwI5CHk5BQDv4R4eAPs?usp=sharing
 Google Drive raw V2V4Real link: optional
 ```
 

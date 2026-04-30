@@ -32,6 +32,25 @@ This is a cleaned MEng research workspace for cooperative BEV reconstruction fro
 
 For a quick pass, please start with `teacher_overview.html`, then review the three final model folders in order: `01_unet_final/`, `02_pix2pix_final/`, and `03_diffusion_final/`.
 
+## Dataset And Literature Notes
+
+Dataset:
+
+- Source dataset: V2V4Real cooperative perception data.
+- Processed training data: `dataset_prepared/`, converted into 8-channel 500 x 500 BEV tensors.
+- Input to models: masked ego BEV plus neighbor BEV, 16 channels total.
+- Target: clean ego BEV, 8 channels.
+- Splits used in the final experiments: 7105 train samples, 748 validation samples, and 1993 test samples.
+- Processed dataset size: 39429 files, about 151.73 GB.
+- Google Drive link: https://drive.google.com/drive/folders/1nQuA6qQhK8wcshwI5CHk5BQDv4R4eAPs?usp=sharing
+
+Literature and proposal notes:
+
+- Main HTML page: `docs/research_proposal_and_paper_reading.html`
+- Source markdown: `docs/source_markdown/research_proposal_generative_v2v_3d_reconstruction.md`
+- The notes connect the original longer direction, generative V2V 3D reconstruction, with the completed practical experiment: masked multi-height BEV reconstruction.
+- The reading notes cover the motivation for V2V communication efficiency, BEV representation, cooperative perception, and why U-Net / Pix2Pix / diffusion were used as the main model families.
+
 ## Main Result
 
 The final U-Net baseline is still the strongest model. Pix2Pix is a useful GAN comparison but loses recall. Diffusion v3 is corrected enough to be a fair negative baseline, but it predicts too much occupied space in the masked region.
