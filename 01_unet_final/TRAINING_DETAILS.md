@@ -28,7 +28,7 @@ input channels = 16
 output channels = 8
 ```
 
-I kept the model small on purpose. The project is about whether neighbor BEV can help recover the hidden sector, not about hiding the result behind a huge network.
+The model is kept small on purpose. The project is about whether neighbor BEV can help recover the hidden sector, not about hiding the result behind a huge network.
 
 ## Final Hyperparameters
 

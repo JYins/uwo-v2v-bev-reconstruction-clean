@@ -10,7 +10,7 @@ local_runs/training_diffusion_full_seed42_v3
 
 It was trained on Narval A100 for 120 epochs with timestep conditioning and DDIM-style sampled validation/test. This matters because earlier diffusion attempts were not fair final comparisons.
 
-One correction I want to make explicit: the confirmed v3 checkpoint uses `x_t(8ch) + masked ego/neighbor condition(16ch) = 24 input channels`. The mask is used for loss and metrics, but it is not concatenated as an extra model input channel in this final run.
+One implementation detail is worth making explicit: the confirmed v3 checkpoint uses `x_t(8ch) + masked ego/neighbor condition(16ch) = 24 input channels`. The mask is used for loss and metrics, but it is not concatenated as an extra model input channel in this final run.
 
 ## Why This Is Final
 

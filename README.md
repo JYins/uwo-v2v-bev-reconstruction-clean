@@ -28,9 +28,9 @@ uwo-v2v-bev-reconstruction-clean/
 `-- old_versions/                  exploratory runs and runs not promoted as final
 ```
 
-This is the cleaned version of my MEng research workspace for cooperative BEV reconstruction from V2V LiDAR. I organized it so the first-level model folders are the versions I am asking you to review, and each one has its own code, exact run command, metrics, and figures.
+This is a cleaned MEng research workspace for cooperative BEV reconstruction from V2V LiDAR. The first-level model folders are the confirmed final versions for review, and each one includes its own code, exact run command, metrics, and figures.
 
-For a quick pass, I would start with `teacher_overview.html`, then read the three final model folders in order: `01_unet_final/`, `02_pix2pix_final/`, and `03_diffusion_final/`.
+For a quick pass, please start with `teacher_overview.html`, then review the three final model folders in order: `01_unet_final/`, `02_pix2pix_final/`, and `03_diffusion_final/`.
 
 ## Main Result
 
@@ -53,13 +53,13 @@ results/metrics/final_metrics_summary.csv
 
 ## Confirmed Final Runs
 
-| Model | Confirmed run | Why I promoted it |
+| Model | Confirmed run | Why it is promoted |
 | --- | --- | --- |
 | U-Net | `training_unet_optuna_seed42/43/44`, 80 epochs | Same Optuna-selected shared loss, rerun across three seeds, best masked Occ-IoU/F1 balance. |
 | Pix2Pix | `training_pix2pix_full_seed42`, 40 epochs, `lambda_adv=0.1` | The adversarial-weight search selected the small GAN term; useful comparison, but not better than U-Net. |
 | Diffusion v3 | `training_diffusion_full_seed42_v3`, 120 epochs on Narval A100 | Corrected timestep conditioning and DDIM-style sampled evaluation, with LR schedule and gradient clipping. |
 
-Older smoke tests, probes, ablations, and invalid diffusion attempts are under `old_versions/`. I kept them there so the experiment path is visible, but they are separated from the final code I would like reviewed.
+Older smoke tests, probes, ablations, and invalid diffusion attempts are under `old_versions/`. They are kept there so the experiment path is visible, but they are separated from the final code for review.
 
 ## Task Setup
 
@@ -87,7 +87,7 @@ Channels:
   0-3 density, 4-7 max height
 ```
 
-The main metric is masked `Occ-IoU`, with precision/recall/F1 reported beside it. The masked region is the real reconstruction target, so I treat full-image metrics as supporting evidence rather than the main conclusion.
+The main metric is masked `Occ-IoU`, with precision/recall/F1 reported beside it. The masked region is the real reconstruction target, so full-image metrics are used as supporting evidence rather than the main conclusion.
 
 ## Running
 
@@ -113,10 +113,10 @@ Training outputs go into each model folder's `local_runs/`. That folder is ignor
 
 The repo is split into final code, final results, supporting docs, and old versions:
 
-- `01_unet_final/`, `02_pix2pix_final/`, and `03_diffusion_final/` are the model folders to inspect or edit.
+- `01_unet_final/`, `02_pix2pix_final/`, and `03_diffusion_final/` are the model folders for review or editing.
 - Each final model folder has its own `TRAINING_DETAILS.md`, `results/METRICS_SUMMARY.md`, and `results/figures/`.
 - `results/` at the root keeps the cross-model summary and the full figure archive from the report.
 - `docs/` has the final HTML report and the proposal/literature-review page.
 - `old_versions/` keeps earlier experiments with notes on why they were not promoted.
 
-I kept the code as readable research scripts rather than turning it into a large package. The goal is for the training choices, hyperparameters, and failure cases to be easy to inspect and correct.
+The code is kept as readable research scripts rather than a large package. The goal is for the training choices, hyperparameters, and failure cases to be easy to inspect and correct.

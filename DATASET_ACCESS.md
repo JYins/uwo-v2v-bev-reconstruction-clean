@@ -11,10 +11,10 @@ V2V4Real/            2.4 GB
 
 ## Google Drive Copy
 
-On 2026-04-29, I copied the processed dataset into the local Google Drive Desktop folder:
+On 2026-04-29, the processed dataset was copied into the local Google Drive Desktop folder:
 
 ```text
-G:\我的云端硬盘\uwo-v2v-bev-reconstruction-dataset\dataset_prepared
+Google Drive Desktop folder / uwo-v2v-bev-reconstruction-dataset / dataset_prepared
 ```
 
 Local copy check:

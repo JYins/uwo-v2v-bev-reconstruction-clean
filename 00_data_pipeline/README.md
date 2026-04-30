@@ -14,7 +14,7 @@ The older exploratory script is kept too:
 code/multi_height_bin_bev.py
 ```
 
-I keep it because it records the early BEV design decisions and visualization work. For a clean rerun, use `prepare_dataset.py`.
+It is kept because it records the early BEV design decisions and visualization work. For a clean rerun, please use `prepare_dataset.py`.
 
 ## Output Format
 

@@ -2,7 +2,7 @@
 
 This folder is intentionally part of the cleaned repo.
 
-The goal is not to pretend the project went in a straight line. These folders keep the smoke runs, probes, ablations, and invalid early attempts separated from the final code so a supervisor can see both:
+These folders keep the smoke runs, probes, ablations, and invalid early attempts separated from the final code so the review can distinguish:
 
 - what is actually final;
 - what was tried and rejected.
