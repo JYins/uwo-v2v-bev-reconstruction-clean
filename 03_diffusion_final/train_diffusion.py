@@ -52,7 +52,18 @@ def parse_args():
     p.add_argument("--warmup_epochs", type=int, default=2)
     p.add_argument("--max_train_steps", type=int, default=0)
     p.add_argument("--max_eval_batches", type=int, default=0)
+    p.add_argument("--mask_variant", type=str, default="sector75", choices=["sector75", "front_rect", "front_blob"])
+    p.add_argument(
+        "--neighbor_preprocess",
+        type=str,
+        default="none",
+        choices=["none", "register", "register_layernorm"],
+    )
+    p.add_argument("--registration_max_shift_px", type=int, default=24)
     p.add_argument("--shared_config", type=Path, default=None)
+    p.add_argument("--noise_loss_weight", type=float, default=1.0)
+    p.add_argument("--shared_loss_weight", type=float, default=1.0)
+    p.add_argument("--empty_penalty_weight", type=float, default=0.0)
     p.add_argument("--loss_l1_weight", type=float, default=0.7)
     p.add_argument("--loss_mse_weight", type=float, default=0.3)
     p.add_argument("--occ_bce_weight", type=float, default=0.0)
@@ -93,6 +104,14 @@ def masked_noise_l1(pred_noise, noise, mask):
     occluded = 1.0 - mask
     denom = (occluded.sum() * pred_noise.shape[1]).clamp(min=1.0)
     return (torch.abs(pred_noise - noise) * occluded).sum() / denom
+
+
+def masked_empty_density_l1(pred, target, mask, occ_threshold):
+    occluded = 1.0 - mask
+    target_occ = (target[:, :4].sum(dim=1, keepdim=True) > occ_threshold).float()
+    empty = occluded * (1.0 - target_occ)
+    denom = (empty.sum() * pred.shape[1]).clamp(min=1.0)
+    return (torch.abs(pred[:, :4]) * empty).sum() / denom
 
 
 def make_condition(inp, mask):
@@ -334,6 +353,9 @@ def main():
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         seed=args.seed,
+        mask_variant=args.mask_variant,
+        neighbor_preprocess=args.neighbor_preprocess,
+        registration_max_shift_px=args.registration_max_shift_px,
     )
 
     # input: x_t (8ch) + condition (masked ego 8ch + neighbor 8ch + mask 1ch) = 25 channels
@@ -364,7 +386,8 @@ def main():
         f"seed={args.seed} amp={use_amp} sample_steps={args.sample_steps} "
         f"val_every={args.val_every} start_epoch={start_epoch} "
         f"lr={args.lr} min_lr={args.min_lr} warmup={args.warmup_epochs} "
-        f"grad_clip={args.grad_clip}"
+        f"grad_clip={args.grad_clip} mask={args.mask_variant} "
+        f"neighbor_preprocess={args.neighbor_preprocess}"
     )
 
     for epoch in range(start_epoch, args.epochs + 1):
@@ -411,7 +434,17 @@ def main():
                     args.occ_pos_weight,
                     args.occ_logit_temp,
                 )
-                loss = noise_loss + shared_loss
+                empty_penalty = masked_empty_density_l1(
+                    x0_hat,
+                    x0,
+                    mask,
+                    args.occ_threshold,
+                )
+                loss = (
+                    args.noise_loss_weight * noise_loss
+                    + args.shared_loss_weight * shared_loss
+                    + args.empty_penalty_weight * empty_penalty
+                )
             scaler.scale(loss).backward()
             if args.grad_clip > 0:
                 scaler.unscale_(opt)
@@ -430,7 +463,8 @@ def main():
                     f"shared_l1={shared_parts['l1']:.4f} "
                     f"shared_mse={shared_parts['mse']:.4f} "
                     f"shared_occ={shared_parts['occ']:.4f} "
-                    f"shared_height={shared_parts['height']:.4f}"
+                    f"shared_height={shared_parts['height']:.4f} "
+                    f"empty={float(empty_penalty.item()):.4f}"
                 )
             if args.max_train_steps > 0 and step >= args.max_train_steps:
                 break
@@ -573,10 +607,16 @@ def main():
             "warmup_epochs": args.warmup_epochs,
             "max_train_steps": args.max_train_steps,
             "max_eval_batches": args.max_eval_batches,
+            "mask_variant": args.mask_variant,
+            "neighbor_preprocess": args.neighbor_preprocess,
+            "registration_max_shift_px": args.registration_max_shift_px,
             "grad_clip": args.grad_clip,
             "seed": args.seed,
             "resume": str(resume_path) if resume_path else None,
             "shared_config": str(args.shared_config) if args.shared_config else None,
+            "noise_loss_weight": args.noise_loss_weight,
+            "shared_loss_weight": args.shared_loss_weight,
+            "empty_penalty_weight": args.empty_penalty_weight,
             "loss_l1_weight": args.loss_l1_weight,
             "loss_mse_weight": args.loss_mse_weight,
             "occ_bce_weight": args.occ_bce_weight,
