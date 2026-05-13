@@ -8,7 +8,7 @@ Set-Location $ModelDir
 $py = if ($env:V2V_PYTHON) { $env:V2V_PYTHON } else { "python" }
 $cfg = Join-Path $ModelDir "configs\shared_loss_optuna.json"
 $data = if ($env:V2V_DATASET_ROOT) { $env:V2V_DATASET_ROOT } else { Join-Path $RepoRoot "dataset_prepared" }
-$root = Join-Path $ModelDir "local_runs\training_diffusion_baseline_v4_seed42"
+$root = Join-Path $ModelDir "local_runs\smoke_diffusion_baseline_v4_seed42"
 
 if (-not (Test-Path $cfg)) { throw "shared config not found: $cfg" }
 if (-not (Test-Path $data)) { throw "dataset not found: $data" }
@@ -19,17 +19,19 @@ $args = @(
     "-u", (Join-Path $ModelDir "train_diffusion.py"),
     "--dataset_root", $data,
     "--training_root", $root,
-    "--epochs", "80",
-    "--batch_size", "8",
+    "--epochs", "5",
+    "--batch_size", "2",
     "--lr", "5e-5",
     "--min_lr", "5e-6",
     "--timesteps", "1000",
-    "--sample_steps", "25",
-    "--val_every", "5",
-    "--warmup_epochs", "2",
+    "--sample_steps", "10",
+    "--val_every", "1",
+    "--warmup_epochs", "1",
     "--grad_clip", "1.0",
+    "--max_train_steps", "20",
+    "--max_eval_batches", "4",
     "--num_workers", "0",
-    "--print_every", "100",
+    "--print_every", "5",
     "--save_every", "5",
     "--shared_config", $cfg,
     "--occ_bce_weight", "0.0",
@@ -37,10 +39,5 @@ $args = @(
     "--amp"
 )
 
-$last = Join-Path $root "checkpoints\last_diffusion.pth"
-if (Test-Path $last) {
-    $args += @("--resume", $last)
-}
-
-Write-Host "corrected Diffusion baseline v4 seed 42" -ForegroundColor Green
+Write-Host "smoke Diffusion baseline v4 seed 42" -ForegroundColor Green
 & $py $args 2>&1 | Tee-Object -FilePath (Join-Path $root "results\run_live.log")

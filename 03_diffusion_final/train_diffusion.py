@@ -55,7 +55,7 @@ def parse_args():
     p.add_argument("--shared_config", type=Path, default=None)
     p.add_argument("--loss_l1_weight", type=float, default=0.7)
     p.add_argument("--loss_mse_weight", type=float, default=0.3)
-    p.add_argument("--occ_bce_weight", type=float, default=0.35)
+    p.add_argument("--occ_bce_weight", type=float, default=0.0)
     p.add_argument("--occ_loss_type", type=str, default="bce", choices=["bce", "focal", "bin_focal"])
     p.add_argument("--focal_gamma", type=float, default=2.0)
     p.add_argument("--height_l1_weight", type=float, default=0.0)
@@ -96,9 +96,9 @@ def masked_noise_l1(pred_noise, noise, mask):
 
 
 def make_condition(inp, mask):
-    # Final v3 checkpoint was trained with the 16-channel BEV condition only.
-    # The mask is still used for loss and metrics, just not concatenated here.
-    return inp
+    # Diffusion is an inpainting model: the denoiser needs to know which pixels
+    # are fixed context and which pixels it is allowed to generate.
+    return torch.cat([inp, mask], dim=1)
 
 
 def make_sampling_schedule(timesteps, sample_steps):
@@ -123,11 +123,15 @@ def ddim_sample(model, cond, mask, alpha_bar, timesteps, sample_steps):
     device = cond.device
     sample_schedule = make_sampling_schedule(timesteps, sample_steps)
     x = torch.randn(bsz, 8, cond.shape[2], cond.shape[3], device=device)
+    visible = cond[:, :8]
+    hidden = 1.0 - mask
 
     for idx, t_now in enumerate(sample_schedule):
         t_batch = torch.full((bsz,), t_now, device=device, dtype=torch.long)
+        x = x * hidden + visible * mask
         pred_noise = model(torch.cat([x, cond], dim=1), timesteps=t_batch)
         x0_hat = estimate_x0(x, pred_noise, t_batch, alpha_bar).clamp(0.0, 1.0)
+        x0_hat = x0_hat * hidden + visible * mask
         if idx == len(sample_schedule) - 1:
             x = x0_hat
             break
@@ -135,8 +139,53 @@ def ddim_sample(model, cond, mask, alpha_bar, timesteps, sample_steps):
         t_prev = sample_schedule[idx + 1]
         a_prev = alpha_bar[t_prev].view(-1, 1, 1, 1)
         x = torch.sqrt(a_prev) * x0_hat + torch.sqrt(1.0 - a_prev) * pred_noise
+        x = x * hidden + visible * mask
 
-    return x.clamp(0.0, 1.0)
+    return (x.clamp(0.0, 1.0) * hidden + visible * mask).clamp(0.0, 1.0)
+
+
+def init_diffusion_diag_acc():
+    return {
+        "hidden_pixels": 0.0,
+        "pred_occ_sum": 0.0,
+        "target_occ_sum": 0.0,
+        "empty_pixels": 0.0,
+        "empty_false_positive_sum": 0.0,
+        "pred_hidden_sum": 0.0,
+        "target_hidden_sum": 0.0,
+    }
+
+
+@torch.no_grad()
+def merge_diffusion_diag(acc, pred, target, mask, occ_threshold):
+    hidden = 1.0 - mask
+    hidden_bool = hidden > 0.5
+    pred_occ = pred[:, :4].sum(dim=1, keepdim=True) > occ_threshold
+    target_occ = target[:, :4].sum(dim=1, keepdim=True) > occ_threshold
+    empty = (~target_occ) & hidden_bool
+
+    hidden_pixels = hidden_bool.sum().item()
+    empty_pixels = empty.sum().item()
+    acc["hidden_pixels"] += hidden_pixels
+    acc["pred_occ_sum"] += (pred_occ & hidden_bool).sum().item()
+    acc["target_occ_sum"] += (target_occ & hidden_bool).sum().item()
+    acc["empty_pixels"] += empty_pixels
+    acc["empty_false_positive_sum"] += (pred_occ & empty).sum().item()
+    acc["pred_hidden_sum"] += (pred * hidden).sum().item()
+    acc["target_hidden_sum"] += (target * hidden).sum().item()
+
+
+def finalize_diffusion_diag(acc, n_channels):
+    hidden_pixels = max(acc["hidden_pixels"], 1.0)
+    empty_pixels = max(acc["empty_pixels"], 1.0)
+    hidden_values = max(acc["hidden_pixels"] * n_channels, 1.0)
+    return {
+        "pred_occ_rate": acc["pred_occ_sum"] / hidden_pixels,
+        "target_occ_rate": acc["target_occ_sum"] / hidden_pixels,
+        "empty_false_positive_rate": acc["empty_false_positive_sum"] / empty_pixels,
+        "pred_hidden_mean": acc["pred_hidden_sum"] / hidden_values,
+        "target_hidden_mean": acc["target_hidden_sum"] / hidden_values,
+    }
 
 
 @torch.no_grad()
@@ -153,6 +202,7 @@ def evaluate_sampled(
     model.eval()
     n_channels = 8
     acc = init_metric_acc(n_channels)
+    diag_acc = init_diffusion_diag_acc()
 
     for batch_idx, (inp, tgt, mask) in enumerate(loader, start=1):
         inp = inp.to(device, non_blocking=True)
@@ -169,10 +219,13 @@ def evaluate_sampled(
             visible_bev=inp[:, :8],
         )
         merge_metric_acc(acc, batch)
+        merge_diffusion_diag(diag_acc, x0_hat, x0, mask, occ_threshold)
         if max_batches > 0 and batch_idx >= max_batches:
             break
 
-    return finalize_metrics(acc, n_channels)
+    metrics = finalize_metrics(acc, n_channels)
+    metrics.update(finalize_diffusion_diag(diag_acc, n_channels))
+    return metrics
 
 
 def maybe_load_resume(path, model, opt, scaler, device):
@@ -259,7 +312,11 @@ def main():
     args = parse_args()
     if args.shared_config is not None:
         shared = read_shared_loss_config(args.shared_config)
-        apply_shared_loss_overrides(args, shared, preserve_keys={"occ_loss_type", "focal_gamma", "height_l1_weight"})
+        apply_shared_loss_overrides(
+            args,
+            shared,
+            preserve_keys={"occ_bce_weight", "occ_loss_type", "focal_gamma", "height_l1_weight"},
+        )
 
     set_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -279,9 +336,9 @@ def main():
         seed=args.seed,
     )
 
-    # input: x_t (8ch) + condition (masked ego 8ch + neighbor 8ch) = 24 channels
+    # input: x_t (8ch) + condition (masked ego 8ch + neighbor 8ch + mask 1ch) = 25 channels
     model = UNet(
-        in_channels=24,
+        in_channels=25,
         out_channels=8,
         features=[16, 32, 64, 128],
         time_emb_dim=128,
@@ -327,7 +384,7 @@ def main():
             inp = inp.to(device, non_blocking=True)    # 16ch
             x0 = tgt.to(device, non_blocking=True)     # 8ch
             mask = mask.to(device, non_blocking=True)
-            cond = make_condition(inp, mask)           # 16ch
+            cond = make_condition(inp, mask)           # 17ch
 
             t_idx = torch.randint(0, args.timesteps, (x0.shape[0],), device=device)
             noise = torch.randn_like(x0)
@@ -399,9 +456,17 @@ def main():
             "val_masked_rmse": val_metrics["masked_rmse"] if val_metrics else "",
             "val_masked_psnr": val_metrics["masked_psnr"] if val_metrics else "",
             "val_masked_occ_iou": val_metrics["masked_occ_iou"] if val_metrics else "",
+            "val_masked_occ_precision": val_metrics["masked_occ_precision"] if val_metrics else "",
+            "val_masked_occ_recall": val_metrics["masked_occ_recall"] if val_metrics else "",
+            "val_masked_occ_f1": val_metrics["masked_occ_f1"] if val_metrics else "",
             "val_fused_full_psnr": val_metrics["fused_full_psnr"] if val_metrics else "",
             "val_fused_full_occ_iou": val_metrics["fused_full_occ_iou"] if val_metrics else "",
             "val_full_psnr_raw": val_metrics["full_psnr"] if val_metrics else "",
+            "val_pred_occ_rate": val_metrics["pred_occ_rate"] if val_metrics else "",
+            "val_target_occ_rate": val_metrics["target_occ_rate"] if val_metrics else "",
+            "val_empty_false_positive_rate": val_metrics["empty_false_positive_rate"] if val_metrics else "",
+            "val_pred_hidden_mean": val_metrics["pred_hidden_mean"] if val_metrics else "",
+            "val_target_hidden_mean": val_metrics["target_hidden_mean"] if val_metrics else "",
         }
         history.append(row)
 
@@ -409,8 +474,12 @@ def main():
             print(
                 f"  epoch {epoch} done | "
                 f"val IoU={val_metrics['masked_occ_iou']:.4f} "
+                f"prec={val_metrics['masked_occ_precision']:.4f} "
+                f"rec={val_metrics['masked_occ_recall']:.4f} "
                 f"val RMSE={val_metrics['masked_rmse']:.6f} "
-                f"fusedPSNR={val_metrics['fused_full_psnr']:.2f}"
+                f"fusedPSNR={val_metrics['fused_full_psnr']:.2f} "
+                f"predOcc={val_metrics['pred_occ_rate']:.3f} "
+                f"emptyFP={val_metrics['empty_false_positive_rate']:.3f}"
             )
 
         is_better = (
@@ -520,9 +589,9 @@ def main():
             "occ_threshold": args.occ_threshold,
             "amp": use_amp,
             "denoiser_final_activation": "identity",
-            "condition_channels": 16,
-            "model_input_channels": 24,
-            "inpainting_visible_region": "not hard-preserved during sampling",
+            "condition_channels": 17,
+            "model_input_channels": 25,
+            "inpainting_visible_region": "preserved at every DDIM step",
         },
         "time_minutes": total_min,
         "best_epoch": best_epoch,
