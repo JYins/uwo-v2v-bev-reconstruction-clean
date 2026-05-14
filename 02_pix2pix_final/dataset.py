@@ -11,6 +11,7 @@ Small reminder to myself:
 from __future__ import annotations
 
 import argparse
+import csv
 import os
 import random
 from pathlib import Path
@@ -29,6 +30,7 @@ FRONT_R_MIN = 10.0
 FRONT_R_MAX = 38.0
 FRONT_RECT_HALF_WIDTH = 15.5
 MASK_VARIANTS = {"sector75", "front_rect", "front_blob"}
+PREPROCESS_TYPES = {"none", "register_layernorm"}
 
 
 def generate_front_mask(shape, variant):
@@ -61,6 +63,86 @@ def generate_front_mask(shape, variant):
 
     mask[hidden] = 0.0
     return mask
+
+
+def _weighted_center_of_mass(weight_map):
+    total = float(weight_map.sum())
+    if total <= 1e-6:
+        return None
+    rows, cols = np.indices(weight_map.shape)
+    row = float((rows * weight_map).sum() / total)
+    col = float((cols * weight_map).sum() / total)
+    return row, col
+
+
+def _shift_bev_zero(bev, row_shift, col_shift):
+    if row_shift == 0 and col_shift == 0:
+        return bev
+
+    shifted = np.zeros_like(bev)
+    height, width, _ = bev.shape
+
+    src_r0 = max(0, -row_shift)
+    src_r1 = min(height, height - row_shift)
+    dst_r0 = max(0, row_shift)
+    dst_r1 = min(height, height + row_shift)
+
+    src_c0 = max(0, -col_shift)
+    src_c1 = min(width, width - col_shift)
+    dst_c0 = max(0, col_shift)
+    dst_c1 = min(width, width + col_shift)
+
+    if src_r1 > src_r0 and src_c1 > src_c0:
+        shifted[dst_r0:dst_r1, dst_c0:dst_c1, :] = bev[src_r0:src_r1, src_c0:src_c1, :]
+    return shifted
+
+
+def register_neighbor_to_visible_ego(masked_ego, neighbor, mask, max_shift_px=24):
+    visible = mask > 0.5
+    ego_occ = masked_ego[:, :, :4].sum(axis=2) * visible
+    neighbor_occ = neighbor[:, :, :4].sum(axis=2) * visible
+
+    ego_center = _weighted_center_of_mass(ego_occ)
+    neighbor_center = _weighted_center_of_mass(neighbor_occ)
+    if ego_center is None or neighbor_center is None:
+        return neighbor
+
+    row_shift = int(np.clip(round(ego_center[0] - neighbor_center[0]), -max_shift_px, max_shift_px))
+    col_shift = int(np.clip(round(ego_center[1] - neighbor_center[1]), -max_shift_px, max_shift_px))
+    return _shift_bev_zero(neighbor, row_shift, col_shift)
+
+
+def layerwise_match_neighbor_to_ego(masked_ego, neighbor, mask):
+    visible = mask > 0.5
+    if visible.sum() <= 4:
+        return neighbor
+
+    out = neighbor.copy()
+    for ch in range(out.shape[2]):
+        ego_vals = masked_ego[:, :, ch][visible]
+        neighbor_vals = out[:, :, ch][visible]
+        ego_std = float(ego_vals.std())
+        neighbor_std = float(neighbor_vals.std())
+        if neighbor_std <= 1e-6:
+            continue
+        out[:, :, ch] = (out[:, :, ch] - float(neighbor_vals.mean())) / neighbor_std
+        out[:, :, ch] = out[:, :, ch] * max(ego_std, 1e-6) + float(ego_vals.mean())
+    return np.clip(out, 0.0, 1.0)
+
+
+def preprocess_neighbor(masked_ego, neighbor, mask, preprocess_type, registration_max_shift_px=24):
+    if preprocess_type == "none":
+        return neighbor
+    if preprocess_type != "register_layernorm":
+        raise ValueError(f"Unknown preprocess_type={preprocess_type!r}; expected one of {sorted(PREPROCESS_TYPES)}")
+
+    neighbor = register_neighbor_to_visible_ego(
+        masked_ego,
+        neighbor,
+        mask,
+        max_shift_px=registration_max_shift_px,
+    )
+    return layerwise_match_neighbor_to_ego(masked_ego, neighbor, mask)
 
 
 class BEVReconstructionDataset(Dataset):
@@ -151,6 +233,83 @@ class BEVReconstructionDataset(Dataset):
         return self.samples[idx]
 
 
+class DatasetV2ManifestDataset(Dataset):
+    def __init__(
+        self,
+        dataset_root,
+        split_group,
+        noise_type="sector75",
+        preprocess_type="none",
+        augment=False,
+        registration_max_shift_px=24,
+    ):
+        self.dataset_root = Path(dataset_root)
+        self.split_group = split_group
+        self.noise_type = noise_type
+        self.preprocess_type = preprocess_type
+        self.augment = augment
+        self.registration_max_shift_px = int(registration_max_shift_px)
+
+        if self.noise_type not in MASK_VARIANTS:
+            raise ValueError(f"Unknown noise_type={self.noise_type!r}; expected one of {sorted(MASK_VARIANTS)}")
+        if self.preprocess_type not in PREPROCESS_TYPES:
+            raise ValueError(
+                f"Unknown preprocess_type={self.preprocess_type!r}; expected one of {sorted(PREPROCESS_TYPES)}"
+            )
+
+        manifest_path = self.dataset_root / "splits" / f"{split_group}.csv"
+        if not manifest_path.exists():
+            raise FileNotFoundError(f"dataset_v2 split manifest not found: {manifest_path}")
+
+        self.samples = []
+        with manifest_path.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row["noise_type"] == self.noise_type and row["preprocess_type"] == self.preprocess_type:
+                    self.samples.append(row)
+
+        print(
+            f"  DatasetV2 {split_group}: {len(self.samples)} samples "
+            f"(noise={self.noise_type}, preprocess={self.preprocess_type})"
+        )
+
+    def __len__(self):
+        return len(self.samples)
+
+    def _load_rel(self, rel_path):
+        return np.load(self.dataset_root / rel_path).astype(np.float32)
+
+    def __getitem__(self, idx):
+        sample = self.samples[idx]
+        ego_bev = self._load_rel(sample["clean_img"])
+        masked_ego = self._load_rel(sample["noisy_img"])
+        neighbor = self._load_rel(sample["neighbor_raw"])
+        mask = self._load_rel(sample["mask"])
+
+        neighbor = preprocess_neighbor(
+            masked_ego,
+            neighbor,
+            mask,
+            self.preprocess_type,
+            registration_max_shift_px=self.registration_max_shift_px,
+        )
+
+        if self.augment and np.random.random() > 0.5:
+            ego_bev = np.flip(ego_bev, axis=1).copy()
+            masked_ego = np.flip(masked_ego, axis=1).copy()
+            neighbor = np.flip(neighbor, axis=1).copy()
+            mask = np.flip(mask, axis=1).copy()
+
+        input_bev = np.concatenate([masked_ego, neighbor], axis=2)
+        input_tensor = torch.from_numpy(input_bev.transpose(2, 0, 1))
+        target_tensor = torch.from_numpy(ego_bev.transpose(2, 0, 1))
+        mask_tensor = torch.from_numpy(mask[np.newaxis, :, :])
+        return input_tensor, target_tensor, mask_tensor
+
+    def get_info(self, idx):
+        return self.samples[idx]
+
+
 def discover_available_splits(dataset_root):
     dataset_root = Path(dataset_root)
     if not dataset_root.is_dir():
@@ -169,7 +328,46 @@ def seed_worker(worker_id):
     random.seed(seed)
 
 
-def get_dataloaders(dataset_root, batch_size=8, num_workers=None, seed=None, mask_variant="sector75"):
+def get_dataloaders(
+    dataset_root,
+    batch_size=8,
+    num_workers=None,
+    seed=None,
+    mask_variant="sector75",
+    preprocess_type="none",
+    registration_max_shift_px=24,
+):
+    dataset_root = Path(dataset_root)
+    if (dataset_root / "manifest.csv").exists():
+        print(f"\n  DatasetV2 root: {dataset_root}")
+        print(f"  Noise type: {mask_variant}")
+        print(f"  Preprocess: {preprocess_type}")
+        train_dataset = DatasetV2ManifestDataset(
+            dataset_root,
+            "train",
+            noise_type=mask_variant,
+            preprocess_type=preprocess_type,
+            augment=True,
+            registration_max_shift_px=registration_max_shift_px,
+        )
+        val_dataset = DatasetV2ManifestDataset(
+            dataset_root,
+            "val",
+            noise_type=mask_variant,
+            preprocess_type=preprocess_type,
+            augment=False,
+            registration_max_shift_px=registration_max_shift_px,
+        )
+        test_dataset = DatasetV2ManifestDataset(
+            dataset_root,
+            "test",
+            noise_type=mask_variant,
+            preprocess_type=preprocess_type,
+            augment=False,
+            registration_max_shift_px=registration_max_shift_px,
+        )
+        return make_loaders(train_dataset, val_dataset, test_dataset, batch_size, num_workers, seed)
+
     train_splits, val_splits, test_splits = discover_available_splits(dataset_root)
 
     print(f"\n  Train splits: {train_splits}")
@@ -182,6 +380,10 @@ def get_dataloaders(dataset_root, batch_size=8, num_workers=None, seed=None, mas
     val_dataset = BEVReconstructionDataset(dataset_root, val_splits, augment=False, mask_variant=mask_variant)
     test_dataset = BEVReconstructionDataset(dataset_root, test_splits, augment=False, mask_variant=mask_variant)
 
+    return make_loaders(train_dataset, val_dataset, test_dataset, batch_size, num_workers, seed)
+
+
+def make_loaders(train_dataset, val_dataset, test_dataset, batch_size, num_workers=None, seed=None):
     if num_workers is None:
         # Windows dataloader can be annoying sometimes, so keep it safe there.
         num_workers = 0 if os.name == "nt" else 4
@@ -233,6 +435,7 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument("--mask_variant", type=str, default="sector75", choices=sorted(MASK_VARIANTS))
+    parser.add_argument("--preprocess_type", type=str, default="none", choices=sorted(PREPROCESS_TYPES))
     return parser.parse_args()
 
 
@@ -246,6 +449,7 @@ if __name__ == "__main__":
         num_workers=args.num_workers,
         seed=42,
         mask_variant=args.mask_variant,
+        preprocess_type=args.preprocess_type,
     )
 
     print(f"\n  Train batches: {len(train_loader)}")

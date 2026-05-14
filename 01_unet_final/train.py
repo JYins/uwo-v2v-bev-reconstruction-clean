@@ -43,6 +43,8 @@ class Config:
     out_channels = 8
     features = [16, 32, 64, 128]
     mask_variant = "sector75"
+    preprocess_type = "none"
+    registration_max_shift_px = 24
 
     val_every = 1
     save_every = 10
@@ -624,6 +626,7 @@ def write_summary(path, cfg, n_params, best_epoch, best_metrics, test_metrics, t
         f.write(f"Parameters:      {n_params:,}\n")
         f.write(f"Features:        {cfg.features}\n")
         f.write(f"Mask variant:    {cfg.mask_variant}\n")
+        f.write(f"Preprocess:      {cfg.preprocess_type}\n")
         f.write(f"Epochs:          {cfg.epochs}\n")
         f.write(f"Batch size:      {cfg.batch_size}\n")
         f.write(f"Learning rate:   {cfg.lr}\n")
@@ -693,6 +696,8 @@ def parse_args():
     p.add_argument("--num_workers", type=int, default=Config.num_workers)
     p.add_argument("--features", type=str, default="16,32,64,128")
     p.add_argument("--mask_variant", type=str, default=Config.mask_variant, choices=["sector75", "front_rect", "front_blob"])
+    p.add_argument("--preprocess_type", type=str, default=Config.preprocess_type, choices=["none", "register_layernorm"])
+    p.add_argument("--registration_max_shift_px", type=int, default=Config.registration_max_shift_px)
     p.add_argument("--val_every", type=int, default=Config.val_every)
     p.add_argument("--save_every", type=int, default=Config.save_every)
     p.add_argument("--print_every", type=int, default=Config.print_every)
@@ -731,6 +736,8 @@ def main():
     cfg.num_workers = args.num_workers
     cfg.features = parse_features(args.features)
     cfg.mask_variant = args.mask_variant
+    cfg.preprocess_type = args.preprocess_type
+    cfg.registration_max_shift_px = args.registration_max_shift_px
     cfg.val_every = args.val_every
     cfg.save_every = args.save_every
     cfg.print_every = args.print_every
@@ -766,6 +773,7 @@ def main():
     print(f"  Training root: {cfg.training_root}")
     print(f"  Features:      {cfg.features}")
     print(f"  Mask variant:  {cfg.mask_variant}")
+    print(f"  Preprocess:    {cfg.preprocess_type}")
     print(f"  Seed:          {cfg.seed}")
     if args.shared_config is not None:
         print(f"  Shared config: {args.shared_config.resolve()}")
@@ -776,6 +784,8 @@ def main():
         num_workers=cfg.num_workers,
         seed=cfg.seed,
         mask_variant=cfg.mask_variant,
+        preprocess_type=cfg.preprocess_type,
+        registration_max_shift_px=cfg.registration_max_shift_px,
     )
     print(f"  Train batches: {len(train_loader)}")
     print(f"  Val batches:   {len(val_loader)}")
@@ -875,6 +885,7 @@ def main():
                     {
                         "features": cfg.features,
                         "mask_variant": cfg.mask_variant,
+                        "preprocess_type": cfg.preprocess_type,
                         "val_metrics": val_metrics,
                     },
                 )
@@ -912,7 +923,7 @@ def main():
                 epoch,
                 model,
                 optimizer,
-                {"features": cfg.features, "mask_variant": cfg.mask_variant},
+                {"features": cfg.features, "mask_variant": cfg.mask_variant, "preprocess_type": cfg.preprocess_type},
             )
 
     total_minutes = (time.time() - start) / 60.0
@@ -949,6 +960,8 @@ def main():
             "batch_size": cfg.batch_size,
             "features": cfg.features,
             "mask_variant": cfg.mask_variant,
+            "preprocess_type": cfg.preprocess_type,
+            "registration_max_shift_px": cfg.registration_max_shift_px,
             "lr": cfg.lr,
             "seed": cfg.seed,
             "loss_l1_weight": cfg.loss_l1_weight,

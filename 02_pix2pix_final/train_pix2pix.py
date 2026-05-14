@@ -62,6 +62,9 @@ def parse_args():
     p.add_argument("--d_lr", type=float, default=2e-4)
     p.add_argument("--num_workers", type=int, default=0 if os.name == "nt" else 4)
     p.add_argument("--lambda_adv", type=float, default=1.0)
+    p.add_argument("--mask_variant", type=str, default="sector75", choices=["sector75", "front_rect", "front_blob"])
+    p.add_argument("--preprocess_type", type=str, default="none", choices=["none", "register_layernorm"])
+    p.add_argument("--registration_max_shift_px", type=int, default=24)
     p.add_argument("--shared_config", type=Path, default=None)
     p.add_argument("--loss_l1_weight", type=float, default=0.7)
     p.add_argument("--loss_mse_weight", type=float, default=0.3)
@@ -101,6 +104,9 @@ def main():
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         seed=args.seed,
+        mask_variant=args.mask_variant,
+        preprocess_type=args.preprocess_type,
+        registration_max_shift_px=args.registration_max_shift_px,
     )
 
     gen = UNet(in_channels=16, out_channels=8, features=[16, 32, 64, 128]).to(device)
@@ -121,7 +127,8 @@ def main():
     print("\nPix2Pix training")
     print(
         f"device={device} epochs={args.epochs} batch={args.batch_size} "
-        f"seed={args.seed} amp={use_amp}"
+        f"seed={args.seed} amp={use_amp} "
+        f"mask={args.mask_variant} preprocess={args.preprocess_type}"
     )
 
     for epoch in range(1, args.epochs + 1):
@@ -268,6 +275,9 @@ def main():
             "g_lr": args.g_lr,
             "d_lr": args.d_lr,
             "lambda_adv": args.lambda_adv,
+            "mask_variant": args.mask_variant,
+            "preprocess_type": args.preprocess_type,
+            "registration_max_shift_px": args.registration_max_shift_px,
             "seed": args.seed,
             "shared_config": str(args.shared_config) if args.shared_config else None,
             "loss_l1_weight": args.loss_l1_weight,
