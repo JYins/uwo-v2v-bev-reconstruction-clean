@@ -335,9 +335,12 @@ def get_dataloaders(
     seed=None,
     mask_variant="sector75",
     preprocess_type="none",
+    neighbor_preprocess=None,
     registration_max_shift_px=24,
 ):
     dataset_root = Path(dataset_root)
+    if neighbor_preprocess is not None:
+        preprocess_type = neighbor_preprocess
     if (dataset_root / "manifest.csv").exists():
         print(f"\n  DatasetV2 root: {dataset_root}")
         print(f"  Noise type: {mask_variant}")
