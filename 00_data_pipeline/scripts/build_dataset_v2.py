@@ -102,7 +102,7 @@ def rel(path, root):
     return path.relative_to(root).as_posix()
 
 
-def discover_samples(src_root):
+def discover_samples(src_root, limit=0):
     samples = []
     for split_path in sorted(path for path in src_root.iterdir() if path.is_dir()):
         group = split_group(split_path.name)
@@ -132,6 +132,8 @@ def discover_samples(src_root):
                             "sector_mask": mask_path,
                         }
                     )
+                    if limit > 0 and len(samples) >= limit:
+                        return samples
     return samples
 
 
@@ -221,9 +223,7 @@ def main():
     ]:
         (dst_root / folder).mkdir(parents=True, exist_ok=True)
 
-    samples = discover_samples(src_root)
-    if args.limit > 0:
-        samples = samples[: args.limit]
+    samples = discover_samples(src_root, limit=args.limit)
 
     write_noise_type_metadata(dst_root)
     write_readme(dst_root, args.materialize_noisy)
