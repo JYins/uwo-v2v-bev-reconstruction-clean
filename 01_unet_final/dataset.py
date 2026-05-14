@@ -30,6 +30,7 @@ FRONT_R_MIN = 10.0
 FRONT_R_MAX = 38.0
 FRONT_RECT_HALF_WIDTH = 15.5
 MASK_VARIANTS = {"sector75", "front_rect", "front_blob"}
+DATASET_V2_NOISE_CHOICES = MASK_VARIANTS | {"all"}
 PREPROCESS_TYPES = {"none", "register_layernorm"}
 
 
@@ -250,8 +251,10 @@ class DatasetV2ManifestDataset(Dataset):
         self.augment = augment
         self.registration_max_shift_px = int(registration_max_shift_px)
 
-        if self.noise_type not in MASK_VARIANTS:
-            raise ValueError(f"Unknown noise_type={self.noise_type!r}; expected one of {sorted(MASK_VARIANTS)}")
+        if self.noise_type not in DATASET_V2_NOISE_CHOICES:
+            raise ValueError(
+                f"Unknown noise_type={self.noise_type!r}; expected one of {sorted(DATASET_V2_NOISE_CHOICES)}"
+            )
         if self.preprocess_type not in PREPROCESS_TYPES:
             raise ValueError(
                 f"Unknown preprocess_type={self.preprocess_type!r}; expected one of {sorted(PREPROCESS_TYPES)}"
@@ -265,7 +268,8 @@ class DatasetV2ManifestDataset(Dataset):
         with manifest_path.open("r", encoding="utf-8", newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row["noise_type"] == self.noise_type and row["preprocess_type"] == self.preprocess_type:
+                noise_ok = self.noise_type == "all" or row["noise_type"] == self.noise_type
+                if noise_ok and row["preprocess_type"] == self.preprocess_type:
                     self.samples.append(row)
 
         print(
@@ -342,6 +346,10 @@ def get_dataloaders(
     if neighbor_preprocess is not None:
         preprocess_type = neighbor_preprocess
     if (dataset_root / "manifest.csv").exists():
+        if mask_variant not in DATASET_V2_NOISE_CHOICES:
+            raise ValueError(
+                f"Unknown dataset_v2 noise type={mask_variant!r}; expected one of {sorted(DATASET_V2_NOISE_CHOICES)}"
+            )
         print(f"\n  DatasetV2 root: {dataset_root}")
         print(f"  Noise type: {mask_variant}")
         print(f"  Preprocess: {preprocess_type}")
@@ -437,7 +445,7 @@ def parse_args():
     parser.add_argument("--dataset_root", type=Path, default=DEFAULT_DATASET_ROOT)
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_workers", type=int, default=None)
-    parser.add_argument("--mask_variant", type=str, default="sector75", choices=sorted(MASK_VARIANTS))
+    parser.add_argument("--mask_variant", type=str, default="sector75", choices=sorted(DATASET_V2_NOISE_CHOICES))
     parser.add_argument("--preprocess_type", type=str, default="none", choices=sorted(PREPROCESS_TYPES))
     return parser.parse_args()
 

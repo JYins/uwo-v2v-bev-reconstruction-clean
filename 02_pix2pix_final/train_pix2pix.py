@@ -62,7 +62,7 @@ def parse_args():
     p.add_argument("--d_lr", type=float, default=2e-4)
     p.add_argument("--num_workers", type=int, default=0 if os.name == "nt" else 4)
     p.add_argument("--lambda_adv", type=float, default=1.0)
-    p.add_argument("--mask_variant", type=str, default="sector75", choices=["sector75", "front_rect", "front_blob"])
+    p.add_argument("--mask_variant", type=str, default="sector75", choices=["sector75", "front_rect", "front_blob", "all"])
     p.add_argument("--preprocess_type", type=str, default="none", choices=["none", "register_layernorm"])
     p.add_argument("--registration_max_shift_px", type=int, default=24)
     p.add_argument("--shared_config", type=Path, default=None)

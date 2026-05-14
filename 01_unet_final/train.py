@@ -695,7 +695,7 @@ def parse_args():
     p.add_argument("--lr", type=float, default=Config.lr)
     p.add_argument("--num_workers", type=int, default=Config.num_workers)
     p.add_argument("--features", type=str, default="16,32,64,128")
-    p.add_argument("--mask_variant", type=str, default=Config.mask_variant, choices=["sector75", "front_rect", "front_blob"])
+    p.add_argument("--mask_variant", type=str, default=Config.mask_variant, choices=["sector75", "front_rect", "front_blob", "all"])
     p.add_argument("--preprocess_type", type=str, default=Config.preprocess_type, choices=["none", "register_layernorm"])
     p.add_argument("--registration_max_shift_px", type=int, default=Config.registration_max_shift_px)
     p.add_argument("--val_every", type=int, default=Config.val_every)
