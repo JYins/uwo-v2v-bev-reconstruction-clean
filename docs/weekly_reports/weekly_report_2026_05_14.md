@@ -42,13 +42,13 @@ Diffusion v3 was the first complete and reproducible Diffusion baseline. Compare
 
 ### Diffusion v3 Visual Evidence
 
-These examples show why the numerical result is not enough by itself: the generated hidden region is noisy / over-occupied and does not recover clean multi-layer BEV structure.
+These examples use the correct inpainting/fused visualization: the visible ego region is preserved, and the Diffusion output is shown only in the hidden front sector. This is the version I should present to explain the failure fairly. The problem is not that the whole BEV image is replaced by noise; the problem is that the reconstructed hidden sector is noisy / over-occupied and does not recover clean multi-layer BEV structure.
 
-![Diffusion v3 sample](assets_2026_05_14/test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png)
+![Diffusion v3 fused inpainting sample 1](assets_2026_05_14/diffusion_v3_fused_01_bev.png)
 
-![Diffusion v3 sample](assets_2026_05_14/test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png)
+![Diffusion v3 fused inpainting sample 2](assets_2026_05_14/diffusion_v3_fused_02_bev.png)
 
-![Diffusion v3 sample](assets_2026_05_14/test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png)
+![Diffusion v3 per-layer split](assets_2026_05_14/diffusion_v3_fused_01_channels.png)
 
 
 ## 3. Registered / Pre-Layer Diffusion Follow-Up
@@ -93,6 +93,14 @@ Important log lines:
 ```
 
 ![Registered diffusion diagnostics](assets_2026_05_14/registered_v4_diagnostics.png)
+
+### Registered v4 Visual Evidence
+
+These panels show the teacher-inspired follow-up with per-layer neighbor registration and layer normalization. The visible ego region is still preserved, so the visual diagnosis is focused on the front hidden sector. Even after registration, the hidden sector remains over-filled/noisy instead of matching the sparse ground truth.
+
+![Registered v4 fused sample 1](assets_2026_05_14/diffusion_v4_registered_fused_01.png)
+
+![Registered v4 fused sample 2](assets_2026_05_14/diffusion_v4_registered_fused_02.png)
 
 **Decision:** I stopped the run around epoch 62 because the diagnostic metrics stayed saturated:
 

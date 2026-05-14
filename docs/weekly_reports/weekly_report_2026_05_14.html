@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Weekly Project Update</title>
+  <title>weekly_report_2026_05_14</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -28,9 +28,6 @@
   <link rel="stylesheet" href="weekly_report_plain.css" />
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">Weekly Project Update</h1>
-</header>
 <h1
 id="weekly-project-update-diffusion-diagnosis-and-dataset-redesign">Weekly
 Project Update: Diffusion Diagnosis and Dataset Redesign</h1>
@@ -126,26 +123,29 @@ alt="Diffusion v3 metric bars" />
 a clear failure mode: high recall with very low precision means it
 predicts too much occupied space in the hidden region.</p>
 <h3 id="diffusion-v3-visual-evidence">Diffusion v3 Visual Evidence</h3>
-<p>These examples show why the numerical result is not enough by itself:
-the generated hidden region is noisy / over-occupied and does not
-recover clean multi-layer BEV structure.</p>
+<p>These examples use the correct inpainting/fused visualization: the
+visible ego region is preserved, and the Diffusion output is shown only
+in the hidden front sector. This is the version I should present to
+explain the failure fairly. The problem is not that the whole BEV image
+is replaced by noise; the problem is that the reconstructed hidden
+sector is noisy / over-occupied and does not recover clean multi-layer
+BEV structure.</p>
 <figure>
-<img
-src="assets_2026_05_14/test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png"
-alt="Diffusion v3 sample" />
-<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+<img src="assets_2026_05_14/diffusion_v3_fused_01_bev.png"
+alt="Diffusion v3 fused inpainting sample 1" />
+<figcaption aria-hidden="true">Diffusion v3 fused inpainting sample
+1</figcaption>
 </figure>
 <figure>
-<img
-src="assets_2026_05_14/test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png"
-alt="Diffusion v3 sample" />
-<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+<img src="assets_2026_05_14/diffusion_v3_fused_02_bev.png"
+alt="Diffusion v3 fused inpainting sample 2" />
+<figcaption aria-hidden="true">Diffusion v3 fused inpainting sample
+2</figcaption>
 </figure>
 <figure>
-<img
-src="assets_2026_05_14/test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png"
-alt="Diffusion v3 sample" />
-<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+<img src="assets_2026_05_14/diffusion_v3_fused_01_channels.png"
+alt="Diffusion v3 per-layer split" />
+<figcaption aria-hidden="true">Diffusion v3 per-layer split</figcaption>
 </figure>
 <h2 id="registered-pre-layer-diffusion-follow-up">3. Registered /
 Pre-Layer Diffusion Follow-Up</h2>
@@ -222,6 +222,23 @@ all-occupied failure:</p>
 alt="Registered diffusion diagnostics" />
 <figcaption aria-hidden="true">Registered diffusion
 diagnostics</figcaption>
+</figure>
+<h3 id="registered-v4-visual-evidence">Registered v4 Visual
+Evidence</h3>
+<p>These panels show the teacher-inspired follow-up with per-layer
+neighbor registration and layer normalization. The visible ego region is
+still preserved, so the visual diagnosis is focused on the front hidden
+sector. Even after registration, the hidden sector remains
+over-filled/noisy instead of matching the sparse ground truth.</p>
+<figure>
+<img src="assets_2026_05_14/diffusion_v4_registered_fused_01.png"
+alt="Registered v4 fused sample 1" />
+<figcaption aria-hidden="true">Registered v4 fused sample 1</figcaption>
+</figure>
+<figure>
+<img src="assets_2026_05_14/diffusion_v4_registered_fused_02.png"
+alt="Registered v4 fused sample 2" />
+<figcaption aria-hidden="true">Registered v4 fused sample 2</figcaption>
 </figure>
 <p><strong>Decision:</strong> I stopped the run around epoch 62 because
 the diagnostic metrics stayed saturated:</p>
