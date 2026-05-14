@@ -1,0 +1,11 @@
+=== SQUEUE ===
+             JOBID                 NAME ST       TIME   TIME_LIMIT     NODELIST(REASON)
+          60948542        unet_v2_all42 PD       0:00   1-00:00:00           (Priority)
+          60948543        pix2_v2_all42 PD       0:00   1-00:00:00           (Priority)
+=== SACCT ===
+JobID|JobName|State|Elapsed|Timelimit|ExitCode
+60948542|unet_v2_all42|PENDING|00:00:00|1-00:00:00|0:0
+60948543|pix2_v2_all42|PENDING|00:00:00|1-00:00:00|0:0
+=== LOG TAIL U ===
+=== LOG TAIL P ===
+=== RUN DIRS ===

@@ -1,0 +1,21 @@
+{
+  "source_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_prepared",
+  "dataset_v2_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_v2",
+  "base_samples": 9846,
+  "noise_types": [
+    "sector75",
+    "front_rect",
+    "front_blob"
+  ],
+  "preprocess_types": [
+    "none",
+    "register_layernorm"
+  ],
+  "manifest_rows": 59076,
+  "materialize_noisy": true,
+  "split_rows": {
+    "train": 42630,
+    "val": 4488,
+    "test": 11958
+  }
+}

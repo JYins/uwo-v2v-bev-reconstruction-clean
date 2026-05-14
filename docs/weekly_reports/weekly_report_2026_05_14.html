@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Weekly Project Update</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="weekly_report_plain.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Weekly Project Update</h1>
+</header>
+<h1
+id="weekly-project-update-diffusion-diagnosis-and-dataset-redesign">Weekly
+Project Update: Diffusion Diagnosis and Dataset Redesign</h1>
+<p><strong>Date:</strong> May 14, 2026<br />
+<strong>Project:</strong> V2V BEV Reconstruction under Front-Region
+Sensor Occlusion</p>
+<h2 id="what-i-led-this-week">1. What I Led This Week</h2>
+<p>This week I moved the project from simply following model-level
+suggestions to making project-level decisions. The main shift was:</p>
+<ul>
+<li>I treated Diffusion as a scientific baseline instead of repeatedly
+forcing it to look good.</li>
+<li>I diagnosed why Diffusion failed using precision, recall, predicted
+occupancy rate, and empty false-positive rate.</li>
+<li>I redesigned the dataset protocol into a larger mixed-noise dataset
+with explicit <code>noisetype</code> and preprocessing metadata.</li>
+<li>I started mixed-noise U-Net and Pix2Pix training on Narval using the
+new <code>dataset_v2</code>.</li>
+<li>I built a paper-writing workflow so literature reading, notes, and
+thesis writing feed into each other.</li>
+</ul>
+<p>The key conclusion is direct: <strong>Diffusion is currently a
+negative baseline for this BEV reconstruction setup, while U-Net/Pix2Pix
+on the new mixed-noise dataset are now the next main
+experiments.</strong></p>
+<h2 id="diffusion-v3-official-negative-baseline">2. Diffusion v3:
+Official Negative Baseline</h2>
+<p>Diffusion v3 was the first complete and reproducible Diffusion
+baseline. Compared with the earlier diffusion attempts, I fixed the
+training/evaluation protocol before judging it:</p>
+<ul>
+<li>Added timestep conditioning to the denoiser.</li>
+<li>Used real DDIM-style reverse sampling for validation/test instead of
+proxy evaluation.</li>
+<li>Added resume-safe checkpointing for Narval jobs.</li>
+<li>Used LR warmup + cosine decay and gradient clipping.</li>
+<li>Ran a full seed-42 Narval run for 120 epochs.</li>
+</ul>
+<p><strong>Diffusion v3 test result:</strong></p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>masked Occ-IoU</td>
+<td style="text-align: right;">0.0467</td>
+<td>Very low overlap with true occupied cells</td>
+</tr>
+<tr>
+<td>masked precision</td>
+<td style="text-align: right;">0.0467</td>
+<td>Most predicted occupied cells are false positives</td>
+</tr>
+<tr>
+<td>masked recall</td>
+<td style="text-align: right;">1.0000</td>
+<td>High only because it predicts almost everything occupied</td>
+</tr>
+<tr>
+<td>masked F1</td>
+<td style="text-align: right;">0.0893</td>
+<td>Low balanced occupancy score</td>
+</tr>
+<tr>
+<td>masked RMSE</td>
+<td style="text-align: right;">0.3810</td>
+<td>Poor reconstruction magnitude</td>
+</tr>
+<tr>
+<td>fused full PSNR</td>
+<td style="text-align: right;">17.00 dB</td>
+<td>Full BEV looks better only because visible region is copied
+back</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="assets_2026_05_14/diffusion_v3_metric_bars.png"
+alt="Diffusion v3 metric bars" />
+<figcaption aria-hidden="true">Diffusion v3 metric bars</figcaption>
+</figure>
+<p><strong>Interpretation:</strong> v3 is not just a little weak. It has
+a clear failure mode: high recall with very low precision means it
+predicts too much occupied space in the hidden region.</p>
+<h3 id="diffusion-v3-visual-evidence">Diffusion v3 Visual Evidence</h3>
+<p>These examples show why the numerical result is not enough by itself:
+the generated hidden region is noisy / over-occupied and does not
+recover clean multi-layer BEV structure.</p>
+<figure>
+<img
+src="assets_2026_05_14/test_01_testoutput_CAV_data_2022-03-15-09-54-40_0_000000.png"
+alt="Diffusion v3 sample" />
+<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+</figure>
+<figure>
+<img
+src="assets_2026_05_14/test_02_testoutput_CAV_data_2022-03-17-10-50-46_0_000164.png"
+alt="Diffusion v3 sample" />
+<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+</figure>
+<figure>
+<img
+src="assets_2026_05_14/test_03_testoutput_CAV_data_2022-03-21-09-35-07_7_000089.png"
+alt="Diffusion v3 sample" />
+<figcaption aria-hidden="true">Diffusion v3 sample</figcaption>
+</figure>
+<h2 id="registered-pre-layer-diffusion-follow-up">3. Registered /
+Pre-Layer Diffusion Follow-Up</h2>
+<p>After v3 failed, I did not blindly rerun the same setup. I tested the
+teacher-inspired preprocessing idea as a controlled follow-up.</p>
+<h3 id="what-changed">What Changed</h3>
+<p>I added a BEV-level preprocessing path:</p>
+<ul>
+<li><strong>Registration:</strong> estimate a translation between
+neighbor BEV and visible ego BEV using occupancy centroid in the visible
+region.</li>
+<li><strong>Per-layer processing:</strong> after alignment, calibrate
+each of the 8 BEV channels separately using visible-region
+statistics.</li>
+<li><strong>Why per-layer:</strong> channels 0-3 are density-like
+occupancy bins, channels 4-7 are height-related bins. Treating them like
+RGB would be wrong.</li>
+</ul>
+<p>I also changed the diffusion training objective to reduce the
+all-occupied failure:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th style="text-align: right;">Setting</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>noise loss weight</td>
+<td style="text-align: right;">0.2</td>
+<td>Reduce pure denoising dominance</td>
+</tr>
+<tr>
+<td>shared reconstruction weight</td>
+<td style="text-align: right;">2.0</td>
+<td>Force x0 reconstruction to matter more</td>
+</tr>
+<tr>
+<td>empty penalty weight</td>
+<td style="text-align: right;">1.0</td>
+<td>Penalize predicting obstacles in truly empty hidden cells</td>
+</tr>
+<tr>
+<td>height consistency</td>
+<td style="text-align: right;">0.1</td>
+<td>Preserve multi-layer height structure</td>
+</tr>
+<tr>
+<td>occupancy BCE</td>
+<td style="text-align: right;">0.0</td>
+<td>Previous BCE/focal variants worsened all-occupied saturation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="run-evidence">Run Evidence</h3>
+<p>Run root:</p>
+<pre class="text"><code>/home/syin94/scratch/MEng_Project/runs/training_diffusion_registered_x0_seed42_v1</code></pre>
+<p>Important log lines:</p>
+<pre class="text"><code>[regx0] Run root: /home/syin94/scratch/MEng_Project/runs/training_diffusion_registered_x0_seed42_v1
+[regx0] train_diffusion sha256: a320cc647820c071a4abc67918511a1dde78aaafb0130c4f1b76b59de31d0f38
+[regx0] dataset sha256: 32eb2ac259b3bb14446d8be56ca0af8f2d392b689cba69a285a9d41876483141
+  epoch 5 done | val IoU=0.0447 prec=0.0447 rec=1.0000 val RMSE=0.906115 fusedPSNR=9.47 predOcc=1.000 emptyFP=1.000
+  epoch 30 done | val IoU=0.0447 prec=0.0447 rec=0.9971 val RMSE=0.806104 fusedPSNR=10.49 predOcc=0.997 emptyFP=0.997
+  epoch 60 done | val IoU=0.0447 prec=0.0447 rec=0.9994 val RMSE=0.730949 fusedPSNR=11.34 predOcc=0.999 emptyFP=0.999</code></pre>
+<figure>
+<img src="assets_2026_05_14/registered_v4_diagnostics.png"
+alt="Registered diffusion diagnostics" />
+<figcaption aria-hidden="true">Registered diffusion
+diagnostics</figcaption>
+</figure>
+<p><strong>Decision:</strong> I stopped the run around epoch 62 because
+the diagnostic metrics stayed saturated:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;">Epoch</th>
+<th style="text-align: right;">Occ-IoU</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">Recall</th>
+<th style="text-align: right;">RMSE</th>
+<th style="text-align: right;">Pred Occ Rate</th>
+<th style="text-align: right;">Empty FP Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.9061</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.8611</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.9971</td>
+<td style="text-align: right;">0.8061</td>
+<td style="text-align: right;">0.997</td>
+<td style="text-align: right;">0.997</td>
+</tr>
+<tr>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.9982</td>
+<td style="text-align: right;">0.8134</td>
+<td style="text-align: right;">0.998</td>
+<td style="text-align: right;">0.998</td>
+</tr>
+<tr>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.0447</td>
+<td style="text-align: right;">0.9994</td>
+<td style="text-align: right;">0.7309</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.999</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> registration and per-layer
+calibration improved the project depth, but they did not solve diffusion
+saturation. The model still predicted almost the entire hidden region as
+occupied. This supports reporting Diffusion as a negative baseline
+rather than spending more GPU time on blind reruns.</p>
+<h2 id="dataset-redesign-from-one-mask-to-a-mixed-noise-dataset">4.
+Dataset Redesign: From One Mask to a Mixed-Noise Dataset</h2>
+<p>I rebuilt the dataset protocol into <code>dataset_v2</code> without
+modifying the original <code>dataset_prepared</code> folder.</p>
+<figure>
+<img src="assets_2026_05_14/dataset_v2_layout.png"
+alt="dataset_v2 layout" />
+<figcaption aria-hidden="true">dataset_v2 layout</figcaption>
+</figure>
+<h3 id="why-these-noise-types">Why These Noise Types</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Noise type</th>
+<th>Why I chose it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sector75</code></td>
+<td>Original front-sector sensor failure; keeps the official task
+definition.</td>
+</tr>
+<tr>
+<td><code>front_rect</code></td>
+<td>A regular front block occlusion; simple, controlled, and easy to
+explain.</td>
+</tr>
+<tr>
+<td><code>front_blob</code></td>
+<td>An irregular front occlusion; closer to non-uniform real-world
+occlusion while still deterministic.</td>
+</tr>
+</tbody>
+</table>
+<p>I did not choose random whole-image masking or arbitrary scattered
+masks because the project is not generic image inpainting. The driving
+question is front-region BEV recovery when ego sensing is weak.</p>
+<h3 id="dataset-v2-result">Dataset v2 Result</h3>
+<pre class="text"><code>[dataset_v2] start=Thu 14 May 2026 12:42:32 AM EDT
+  &quot;base_samples&quot;: 9846,
+  &quot;manifest_rows&quot;: 59076,
+  &quot;materialize_noisy&quot;: true,
+  &quot;split_rows&quot;: {
+[dataset_v2] size
+4.0G    /home/syin94/scratch/MEng_Project/data/dataset_v2
+  &quot;base_samples&quot;: 9846,
+  &quot;manifest_rows&quot;: 59076,
+  &quot;materialize_noisy&quot;: true,
+  &quot;split_rows&quot;: {</code></pre>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>base samples</td>
+<td style="text-align: right;">9,846</td>
+</tr>
+<tr>
+<td>noise types</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td>preprocess types</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td>manifest rows</td>
+<td style="text-align: right;">59,076</td>
+</tr>
+<tr>
+<td>train rows</td>
+<td style="text-align: right;">42,630</td>
+</tr>
+<tr>
+<td>val rows</td>
+<td style="text-align: right;">4,488</td>
+</tr>
+<tr>
+<td>test rows</td>
+<td style="text-align: right;">11,958</td>
+</tr>
+<tr>
+<td>storage used</td>
+<td style="text-align: right;">about 4.0 GB</td>
+</tr>
+</tbody>
+</table>
+<p>Important point: <code>dataset_v2</code> is a separate folder. The
+original dataset is unchanged.</p>
+<h2 id="current-training-started-on-the-new-dataset">5. Current Training
+Started on the New Dataset</h2>
+<p>I initially queued separate runs by mask type, but I corrected the
+protocol: the main run should train on one mixed dataset using
+<code>noise_type=all</code>.</p>
+<p>Current submitted mixed-noise jobs:</p>
+<pre class="text"><code>=== SQUEUE ===
+             JOBID                 NAME ST       TIME   TIME_LIMIT     NODELIST(REASON)
+          60948542        unet_v2_all42 PD       0:00   1-00:00:00           (Priority)
+          60948543        pix2_v2_all42 PD       0:00   1-00:00:00           (Priority)
+=== SACCT ===
+JobID|JobName|State|Elapsed|Timelimit|ExitCode
+60948542|unet_v2_all42|PENDING|00:00:00|1-00:00:00|0:0
+60948543|pix2_v2_all42|PENDING|00:00:00|1-00:00:00|0:0
+=== LOG TAIL U ===
+=== LOG TAIL P ===
+=== RUN DIRS ===</code></pre>
+<p>Main run configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Dataset</th>
+<th>Noise setting</th>
+<th>Preprocess</th>
+<th style="text-align: right;">Seed</th>
+<th style="text-align: right;">Epochs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U-Net</td>
+<td>dataset_v2</td>
+<td>all noise types mixed</td>
+<td>none</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">80</td>
+</tr>
+<tr>
+<td>Pix2Pix</td>
+<td>dataset_v2</td>
+<td>all noise types mixed</td>
+<td>none</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">80</td>
+</tr>
+</tbody>
+</table>
+<p>This is the right next step because it tests whether the model can
+learn a general recovery policy over multiple front-region occlusion
+shapes.</p>
+<h2 id="paper-writing-workflow">6. Paper Writing Workflow</h2>
+<p>I also built a local paper/thesis workflow so reading and writing are
+not separate from experiments.</p>
+<figure>
+<img src="assets_2026_05_14/paper_workflow.png" alt="Paper workflow" />
+<figcaption aria-hidden="true">Paper workflow</figcaption>
+</figure>
+<p>Local workspace:</p>
+<pre class="text"><code>D:/MEng_Project/thesis</code></pre>
+<p>The workflow is:</p>
+<ol type="1">
+<li>Read one paper.</li>
+<li>Write one note in <code>thesis/notes/papers/</code>.</li>
+<li>Track it in <code>references/reference_matrix.csv</code>.</li>
+<li>Synthesize notes into LaTeX chapters.</li>
+<li>Run citation and build checks.</li>
+</ol>
+<p>This helps me lead the project because each experiment can be tied to
+literature, assumptions, and paper-writing sections instead of staying
+as isolated training runs.</p>
+<h2 id="next-steps">7. Next Steps</h2>
+<ol type="1">
+<li>Monitor the mixed-noise U-Net and Pix2Pix runs.</li>
+<li>Evaluate the trained mixed models both overall and split by
+<code>sector75</code>, <code>front_rect</code>, and
+<code>front_blob</code>.</li>
+<li>Compare mixed-training performance against the old single-mask
+baseline.</li>
+<li>Run <code>register_layernorm</code> as a fair preprocessing ablation
+for U-Net and Pix2Pix, not only Diffusion.</li>
+<li>Keep Diffusion v3 as the official negative baseline unless a later
+architecture-level method is justified.</li>
+</ol>
+<h2 id="supervisor-level-takeaway">8. Supervisor-Level Takeaway</h2>
+<p>My takeaway this week is that the main contribution is no longer just
+testing three model families. The project is becoming a structured BEV
+reconstruction study with:</p>
+<ul>
+<li>a confirmed strong baseline family: U-Net / Pix2Pix,</li>
+<li>a diagnosed negative generative baseline: Diffusion,</li>
+<li>a richer mixed-noise dataset protocol,</li>
+<li>explicit preprocessing metadata,</li>
+<li>and a paper workflow connecting experiments to writing.</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,72 @@
+[dataset_v2] host=nc10517
+[dataset_v2] start=Thu 14 May 2026 12:42:32 AM EDT
+[dataset_v2] src=/home/syin94/scratch/MEng_Project/data/dataset_prepared
+[dataset_v2] dst=/home/syin94/scratch/MEng_Project/data/dataset_v2
+[dataset_v2] script sha256=3fc0dccd7e1dfae0fabbfd8622d4476000dcd550d793dd65baaf9fa7773d22b9
+processed base samples: 500/9846
+processed base samples: 1000/9846
+processed base samples: 1500/9846
+processed base samples: 2000/9846
+processed base samples: 2500/9846
+processed base samples: 3000/9846
+processed base samples: 3500/9846
+processed base samples: 4000/9846
+processed base samples: 4500/9846
+processed base samples: 5000/9846
+processed base samples: 5500/9846
+processed base samples: 6000/9846
+processed base samples: 6500/9846
+processed base samples: 7000/9846
+processed base samples: 7500/9846
+processed base samples: 8000/9846
+processed base samples: 8500/9846
+processed base samples: 9000/9846
+processed base samples: 9500/9846
+{
+  "source_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_prepared",
+  "dataset_v2_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_v2",
+  "base_samples": 9846,
+  "noise_types": [
+    "sector75",
+    "front_rect",
+    "front_blob"
+  ],
+  "preprocess_types": [
+    "none",
+    "register_layernorm"
+  ],
+  "manifest_rows": 59076,
+  "materialize_noisy": true,
+  "split_rows": {
+    "train": 42630,
+    "val": 4488,
+    "test": 11958
+  }
+}
+[dataset_v2] done=Thu 14 May 2026 01:45:40 AM EDT
+[dataset_v2] size
+4.0G	/home/syin94/scratch/MEng_Project/data/dataset_v2
+[dataset_v2] files
+49372
+[dataset_v2] stats
+{
+  "source_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_prepared",
+  "dataset_v2_root": "/lustre07/scratch/syin94/MEng_Project/data/dataset_v2",
+  "base_samples": 9846,
+  "noise_types": [
+    "sector75",
+    "front_rect",
+    "front_blob"
+  ],
+  "preprocess_types": [
+    "none",
+    "register_layernorm"
+  ],
+  "manifest_rows": 59076,
+  "materialize_noisy": true,
+  "split_rows": {
+    "train": 42630,
+    "val": 4488,
+    "test": 11958
+  }
+}

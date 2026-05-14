@@ -1,0 +1,8 @@
+﻿body { font-family: Arial, sans-serif; max-width: 980px; margin: 36px auto; line-height: 1.48; color: #111; background: white; }
+h1, h2, h3 { color: #111; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; }
+th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+th { background: #f3f4f6; }
+img { max-width: 100%; display: block; margin: 12px auto; border: 1px solid #ddd; }
+pre { background: #f6f8fa; padding: 10px; overflow-x: auto; border: 1px solid #ddd; }
+code { font-family: Consolas, monospace; }
